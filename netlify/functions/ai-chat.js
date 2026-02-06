@@ -11,7 +11,7 @@ const API_KEY = GROQ_API_KEY || OPENAI_API_KEY;
 const API_URL = USE_GROQ 
   ? 'https://api.groq.com/openai/v1/chat/completions'
   : 'https://api.openai.com/v1/chat/completions';
-const MODEL = USE_GROQ ? 'llama-3.1-70b-versatile' : 'gpt-4o-mini';
+const MODEL = USE_GROQ ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini';
 
 // Safety: Detect dangerous situations (not block dose calculations)
 const DANGEROUS_PATTERNS = [
