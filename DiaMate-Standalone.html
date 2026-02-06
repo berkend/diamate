@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2E7D32">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>DiaMate Pro - Smart Diabetes Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2E7D32; --primary-light: #4CAF50; --primary-dark: #1B5E20;
+            --secondary: #00BCD4; --accent: #FF6B35; --success: #4CAF50;
+            --warning: #FF9800; --error: #F44336; --info: #2196F3;
+            --surface: #FFFFFF; --background: #F5F7FA;
+            --text-primary: #1A1A2E; --text-secondary: #6B7280; --border: #E5E7EB;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Color Emoji', sans-serif; background: var(--background); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+        .app { width: 100%; max-width: 480px; margin: 0 auto; min-height: 100vh; background: white; box-shadow: 0 0 60px rgba(0,0,0,0.1); position: relative; overflow-x: hidden; }
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .lang-switch { position: fixed; top: 12px; right: 12px; z-index: 9999; display: flex; gap: 4px; background: rgba(255,255,255,0.98); padding: 4px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); backdrop-filter: blur(10px); }
+        .lang-btn { padding: 8px 16px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; background: transparent; color: var(--text-secondary); }
+        .lang-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(46,125,50,0.3); }
+        .login-screen { background: linear-gradient(145deg, #1B5E20 0%, #2E7D32 50%, #43A047 100%); color: white; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 24px; text-align: center; position: relative; overflow: hidden; }
+        .login-screen::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); animation: pulse 8s ease-in-out infinite; }
+        .login-content { position: relative; z-index: 1; width: 100%; max-width: 360px; }
+        .logo-icon { width: 90px; height: 90px; background: rgba(255,255,255,0.2); border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 48px; margin: 0 auto 20px; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3); }
+        .logo { font-size: 42px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
+        .tagline { font-size: 17px; opacity: 0.95; margin-bottom: 8px; font-weight: 500; }
+        .version { font-size: 13px; opacity: 0.7; margin-bottom: 35px; font-weight: 500; }
+        .features-box { background: rgba(255,255,255,0.12); padding: 24px; border-radius: 20px; margin-bottom: 30px; text-align: left; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .features-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
+        .feature-item { padding: 10px 0; font-size: 15px; display: flex; align-items: center; gap: 12px; font-weight: 500; }
+        .feature-icon { width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .btn-start { background: white; color: var(--primary); padding: 18px 60px; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 30px rgba(0,0,0,0.2); transition: all 0.3s ease; width: 100%; }
+        .setup-screen { min-height: 100vh; background: var(--background); padding: 20px; padding-top: 70px; }
+        .setup-header { text-align: center; margin-bottom: 24px; }
+        .setup-title { font-size: 28px; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+        .setup-subtitle { font-size: 15px; color: var(--text-secondary); font-weight: 500; }
+        .progress-bar { display: flex; justify-content: center; align-items: center; margin-bottom: 24px; gap: 8px; }
+        .progress-step { width: 40px; height: 40px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: var(--text-secondary); transition: all 0.3s ease; }
+        .progress-step.active { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(46,125,50,0.4); }
+        .progress-step.done { background: var(--success); color: white; }
+        .progress-line { width: 40px; height: 3px; background: var(--border); border-radius: 2px; }
+        .progress-line.done { background: var(--success); }
+        .setup-card { background: white; padding: 28px; border-radius: 24px; box-shadow: var(--shadow); }
+        .step-content { display: none; }
+        .step-content.active { display: block; animation: slideUp 0.4s ease; }
+        .card-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+        .card-title-icon { width: 44px; height: 44px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .input-group { margin-bottom: 18px; }
+        .input-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input { width: 100%; padding: 16px 18px; border: 2px solid var(--border); border-radius: 14px; font-size: 16px; font-weight: 500; transition: all 0.2s ease; background: var(--background); color: var(--text-primary); }
+        .input:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(46,125,50,0.1); }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: all 0.2s ease; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; box-shadow: 0 4px 15px rgba(46,125,50,0.3); }
+        .btn-secondary { background: var(--background); color: var(--text-secondary); border: 2px solid var(--border); }
+        .health-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+        .health-card { background: var(--background); padding: 24px 16px; border-radius: 18px; text-align: center; cursor: pointer; border: 2px solid var(--border); transition: all 0.3s ease; }
+        .health-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .health-card.connected { border-color: var(--success); background: rgba(76,175,80,0.08); }
+        .health-icon { font-size: 36px; margin-bottom: 10px; }
+        .health-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+        .health-status { font-size: 12px; color: var(--text-secondary); margin-top: 6px; font-weight: 600; }
+        .health-status.connected { color: var(--success); }
+        .typing-dots { display: flex; gap: 4px; }
+        .typing-dots span { width: 8px; height: 8px; background: #667eea; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="lang-switch">
+            <button class="lang-btn active" id="btnTR">TR</button>
+            <button class="lang-btn" id="btnEN">EN</button>
+        </div>
+        <div id="loginScreen" class="screen active">
+            <div class="login-screen">
+                <div class="login-content">
+                    <div class="logo-icon">🩺</div>
+                    <div class="logo">DiaMate Pro</div>
+                    <div class="tagline" data-tr="Akıllı Diyabet Asistanınız" data-en="Your Smart Diabetes Assistant">Akıllı Diyabet Asistanınız</div>
+                    <div class="version">v2.0 | Standalone</div>
+                    <div class="features-box">
+                        <div class="features-title" data-tr="Özellikler" data-en="Features">Özellikler</div>
+                        <div class="feature-item"><div class="feature-icon">📸</div><span data-tr="AI Yemek Fotoğrafı Analizi" data-en="AI Food Photo Analysis">AI Yemek Fotoğrafı Analizi</span></div>
+                        <div class="feature-item"><div class="feature-icon">💉</div><span data-tr="Akıllı İnsülin Hesaplama" data-en="Smart Insulin Calculator">Akıllı İnsülin Hesaplama</span></div>
+                        <div class="feature-item"><div class="feature-icon">📊</div><span data-tr="Detaylı Glukoz Takibi" data-en="Detailed Glucose Tracking">Detaylı Glukoz Takibi</span></div>
+                        <div class="feature-item"><div class="feature-icon">🤖</div><span data-tr="Kişisel AI Önerileri" data-en="Personal AI Recommendations">Kişisel AI Önerileri</span></div>
+                    </div>
+                    <button class="btn-start" id="btnStart" data-tr="Başlayın" data-en="Get Started">Başlayın</button>
+                </div>
+            </div>
+        </div>
+        <div id="setupScreen" class="screen">
+            <div class="setup-screen">
+                <div class="setup-header">
+                    <div class="setup-title" data-tr="Profil Kurulumu" data-en="Profile Setup">Profil Kurulumu</div>
+                    <div class="setup-subtitle" data-tr="Kişiselleştirilmiş deneyim için bilgilerinizi girin" data-en="Enter your info for personalized experience">Kişiselleştirilmiş deneyim için bilgilerinizi girin</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-step active" id="pStep1">1</div>
+                    <div class="progress-line" id="pLine1"></div>
+                    <div class="progress-step" id="pStep2">2</div>
+                    <div class="progress-line" id="pLine2"></div>
+                    <div class="progress-step" id="pStep3">3</div>
+                </div>
+                <div class="setup-card">
+                    <div id="step1" class="step-content active">
+                        <div class="card-title"><div class="card-title-icon">👤</div><span data-tr="Kişisel Bilgiler" data-en="Personal Information">Kişisel Bilgiler</span></div>
+                        <div class="input-group"><label class="input-label" data-tr="Ad Soyad" data-en="Full Name">Ad Soyad</label><input type="text" id="userName" class="input" placeholder="Ahmet Yılmaz"></div>
+                        <div class="input-group"><label class="input-label" data-tr="Yaş" data-en="Age">Yaş</label><input type="number" id="userAge" class="input" placeholder="35"></div>
+                        <div class="input-group"><label class="input-label" data-tr="Cinsiyet" data-en="Gender">Cinsiyet</label><select id="userGender" class="input"><option value="">Seçiniz</option><option value="male">Erkek</option><option value="female">Kadın</option></select></div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="input-group"><label class="input-label" data-tr="Boy (cm)" data-en="Height (cm)">Boy (cm)</label><input type="number" id="userHeight" class="input" placeholder="175"></div>
+                            <div class="input-group"><label class="input-label" data-tr="Kilo (kg)" data-en="Weight (kg)">Kilo (kg)</label><input type="number" id="userWeight" class="input" placeholder="75"></div>
+                        </div>
+                        <button class="btn btn-primary" id="btnStep1Next" data-tr="Devam Et" data-en="Continue">Devam Et</button>
+                    </div>
+                    <div id="step2" class="step-content">
+                        <div class="card-title"><div class="card-title-icon">🏥</div><span data-tr="Sağlık Bilgileri" data-en="Health Information">Sağlık Bilgileri</span></div>
+                        <div class="input-group"><label class="input-label" data-tr="Diyabet Tipi" data-en="Diabetes Type">Diyabet Tipi</label><select id="diabetesType" class="input"><option value="">Seçiniz</option><option value="type1">Tip 1 Diyabet</option><option value="type2">Tip 2 Diyabet</option><option value="gestational">Gebelik Diyabeti</option><option value="prediabetes">Prediyabet</option></select></div>
+                        <div class="input-group"><label class="input-label" data-tr="Aktivite Seviyesi" data-en="Activity Level">Aktivite Seviyesi</label><select id="activityLevel" class="input"><option value="">Seçiniz</option><option value="sedentary">Hareketsiz</option><option value="light">Hafif Aktif</option><option value="moderate">Orta Aktif</option><option value="active">Çok Aktif</option></select></div>
+                        <div class="input-group"><label class="input-label" data-tr="Hedef Glukoz Aralığı" data-en="Target Glucose Range">Hedef Glukoz Aralığı</label><select id="targetRange" class="input"><option value="70-140">70 - 140 mg/dL (Standart)</option><option value="80-130">80 - 130 mg/dL (Sıkı)</option><option value="70-180">70 - 180 mg/dL (Esnek)</option></select></div>
+                        <button class="btn btn-secondary" id="btnStep2Back" data-tr="Geri" data-en="Back">Geri</button>
+                        <button class="btn btn-primary" id="btnStep2Next" data-tr="Devam Et" data-en="Continue">Devam Et</button>
+                    </div>
+                    <div id="step3" class="step-content">
+                        <div class="card-title"><div class="card-title-icon">📱</div><span data-tr="Uygulama Bağlantıları" data-en="App Connections">Uygulama Bağlantıları</span></div>
+                        <p style="margin-bottom: 20px; color: var(--text-secondary); font-size: 14px;">Sağlık verilerinizi otomatik senkronize edin (opsiyonel)</p>
+                        <div class="health-grid">
+                            <div class="health-card" id="appleCard"><div class="health-icon">🍎</div><div class="health-title">Apple Health</div><div class="health-status" id="appleStatus">Bağlan</div></div>
+                            <div class="health-card" id="googleCard"><div class="health-icon">💚</div><div class="health-title">Google Fit</div><div class="health-status" id="googleStatus">Bağlan</div></div>
+                            <div class="health-card" id="samsungCard"><div class="health-icon">💙</div><div class="health-title">Samsung Health</div><div class="health-status" id="samsungStatus">Bağlan</div></div>
+                            <div class="health-card" id="dexcomCard"><div class="health-icon">📟</div><div class="health-title">Dexcom CGM</div><div class="health-status" id="dexcomStatus">Bağlan</div></div>
+                        </div>
+                        <button class="btn btn-secondary" id="btnStep3Back" data-tr="Geri" data-en="Back">Geri</button>
+                        <button class="btn btn-primary" id="btnComplete" data-tr="Kurulumu Tamamla" data-en="Complete Setup">Kurulumu Tamamla</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="mainApp" class="screen">
+            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 20px 20px 24px; position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 13px; opacity: 0.9; font-weight: 500;" id="greeting" data-tr="Günaydın" data-en="Good morning">Günaydın</div>
+                        <div style="font-size: 22px; font-weight: 800;" id="headerName">Kullanıcı</div>
+                    </div>
+                    <div style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;" id="headerAvatar">👤</div>
+                </div>
+            </div>
+            <div style="padding: 20px; padding-bottom: 100px; background: var(--background); min-height: calc(100vh - 100px);">
+                <div id="dashboardScreen" class="screen active"></div>
+                <div id="glucoseScreen" class="screen"></div>
+                <div id="photoScreen" class="screen"></div>
+                <div id="doseScreen" class="screen"></div>
+                <div id="reportsScreen" class="screen"></div>
+                <div id="chatScreen" class="screen"></div>
+                <div id="profileScreen" class="screen"></div>
+            </div>
+            <div style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0 12px; box-shadow: 0 -4px 20px rgba(0,0,0,0.08);">
+                <button class="nav-btn active" id="navHome" style="background: none; border: none; display: flex; flex-direction: column; align-items: center; padding: 8px 12px; cursor: pointer; color: var(--primary); font-size: 10px; font-weight: 700; gap: 4px;"><span style="font-size: 22px;">🏠</span><span data-tr="Ana Sayfa" data-en="Home">Ana Sayfa</span></button>
+                <button class="nav-btn" id="navGlucose" style="background: none; border: none; display: flex; flex-direction: column; align-items: center; padding: 8px 12px; cursor: pointer; color: var(--text-secondary); font-size: 10px; font-weight: 700; gap: 4px;"><span style="font-size: 22px;">🩸</span><span data-tr="Kayıt" data-en="Log">Kayıt</span></button>
+                <button class="nav-btn" id="navChat" style="background: none; border: none; display: flex; flex-direction: column; align-items: center; padding: 8px 12px; cursor: pointer; color: var(--text-secondary); font-size: 10px; font-weight: 700; gap: 4px; position: relative;"><span style="font-size: 22px;">🤖</span><span data-tr="AI Asistan" data-en="AI Assistant">AI Asistan</span><div style="position: absolute; top: 2px; right: 8px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite;"></div></button>
+                <button class="nav-btn" id="navReports" style="background: none; border: none; display: flex; flex-direction: column; align-items: center; padding: 8px 12px; cursor: pointer; color: var(--text-secondary); font-size: 10px; font-weight: 700; gap: 4px;"><span style="font-size: 22px;">📊</span><span data-tr="Raporlar" data-en="Reports">Raporlar</span></button>
+                <button class="nav-btn" id="navProfile" style="background: none; border: none; display: flex; flex-direction: column; align-items: center; padding: 8px 12px; cursor: pointer; color: var(--text-secondary); font-size: 10px; font-weight: 700; gap: 4px;"><span style="font-size: 22px;">👤</span><span data-tr="Profil" data-en="Profile">Profil</span></button>
+            </div>
+        </div>
+    </div>
+<script>
+// ============== DiaMate Pro - Standalone Bundle ==============
+// All modules combined into single file for offline/file:// usage
+
+// ============== GLOBAL STATE ==============
+let currentLang = 'tr';
+let currentRoute = 'login';
+let currentSubroute = null;
+let currentTab = 'glucose';
+let editingEntry = null;
+let chatMessages = [];
+let isTyping = false;
+let analysisResult = null;
+
+// ============== SAFETY POLICY ==============
+const SafetyPolicy = {
+    hypoThreshold: 70, hyperThreshold: 180, roundingIncrement: 0.5,
+    minBolus: 0, maxBolusDefault: 15, defaultActiveInsulinHours: 4,
+    trendDownCorrectionMultiplier: 0, blockWhenBelowHypo: true,
+    requireAcknowledgementAboveMax: true, requireTwoStepConfirmForRecording: true,
+    defaultTargetLow: 70, defaultTargetHigh: 140
+};
+
+function isHypo(v) { return v < SafetyPolicy.hypoThreshold; }
+function isHyper(v) { return v > SafetyPolicy.hyperThreshold; }
+function getGlucoseStatus(v) { return isHypo(v) ? 'low' : isHyper(v) ? 'high' : 'normal'; }
+function getStatusColor(s) { return { low: '#F44336', high: '#FF9800', normal: '#4CAF50' }[s] || '#4CAF50'; }
+
+// ============== UTILITIES ==============
+function getLang() { return currentLang; }
+function setLang(l) { currentLang = l; }
+function t(tr, en) { return currentLang === 'en' ? en : tr; }
+function uuid() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); }); }
+function mean(arr) { return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0; }
+function stdDev(arr) { if (arr.length < 2) return 0; const avg = mean(arr); return Math.sqrt(mean(arr.map(v => Math.pow(v - avg, 2)))); }
+function daysAgo(d) { return Date.now() - d * 24 * 60 * 60 * 1000; }
+function roundToIncrement(v, inc) { return Math.round(v / inc) * inc; }
+function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
+function formatRelativeTime(ts) {
+    const diff = Date.now() - ts, mins = Math.floor(diff / 60000), hrs = Math.floor(mins / 60), days = Math.floor(hrs / 24);
+    if (mins < 1) return t('Şimdi', 'Just now');
+    if (mins < 60) return t(`${mins}dk önce`, `${mins}m ago`);
+    if (hrs < 24) return t(`${hrs}sa önce`, `${hrs}h ago`);
+    return t(`${days}g önce`, `${days}d ago`);
+}
+
+// Toast system
+let toastContainer = null;
+function createToast(type, message, duration = 3000) {
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; max-width: 90%; width: 360px;';
+        document.body.appendChild(toastContainer);
+    }
+    const colors = { success: { bg: '#E8F5E9', border: '#4CAF50', text: '#2E7D32', icon: '✓' }, error: { bg: '#FFEBEE', border: '#F44336', text: '#C62828', icon: '✕' }, warning: { bg: '#FFF3E0', border: '#FF9800', text: '#E65100', icon: '⚠' }, info: { bg: '#E3F2FD', border: '#2196F3', text: '#1565C0', icon: 'ℹ' } };
+    const s = colors[type] || colors.info;
+    const toast = document.createElement('div');
+    toast.style.cssText = `background: ${s.bg}; border: 2px solid ${s.border}; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); animation: slideDown 0.3s ease;`;
+    toast.innerHTML = `<span style="font-size: 18px; color: ${s.border};">${s.icon}</span><span style="flex: 1; font-size: 14px; font-weight: 600; color: ${s.text};">${message}</span>`;
+    toastContainer.appendChild(toast);
+    setTimeout(() => { toast.style.animation = 'slideUp 0.3s ease'; setTimeout(() => toast.remove(), 300); }, duration);
+}
+
+function showConfirm(title, message, onConfirm, onCancel) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 20px;';
+    overlay.innerHTML = `<div style="background: white; border-radius: 20px; padding: 24px; max-width: 340px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2);"><div style="font-size: 18px; font-weight: 700; color: #1A1A2E; margin-bottom: 12px;">${title}</div><div style="font-size: 14px; color: #6B7280; margin-bottom: 24px; line-height: 1.5;">${message}</div><div style="display: flex; gap: 12px;"><button id="confirmCancel" style="flex: 1; padding: 14px; border: 2px solid #E5E7EB; background: white; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer;">${t('İptal', 'Cancel')}</button><button id="confirmOk" style="flex: 1; padding: 14px; border: none; background: linear-gradient(135deg, #F44336 0%, #E53935 100%); color: white; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer;">${t('Onayla', 'Confirm')}</button></div></div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#confirmCancel').onclick = () => { overlay.remove(); if (onCancel) onCancel(); };
+    overlay.querySelector('#confirmOk').onclick = () => { overlay.remove(); if (onConfirm) onConfirm(); };
+    overlay.onclick = e => { if (e.target === overlay) { overlay.remove(); if (onCancel) onCancel(); } };
+}
+
+function validateNumeric(v, min = 0, max = Infinity) {
+    const n = parseFloat(v);
+    if (isNaN(n)) return { valid: false, error: t('Geçerli bir sayı girin', 'Enter a valid number') };
+    if (n < min) return { valid: false, error: t(`Minimum: ${min}`, `Minimum: ${min}`) };
+    if (n > max) return { valid: false, error: t(`Maksimum: ${max}`, `Maximum: ${max}`) };
+    return { valid: true, value: n };
+}
+
+function showInputError(id, msg) {
+    const inp = document.getElementById(id);
+    if (!inp) return;
+    inp.style.borderColor = '#F44336';
+    let err = inp.parentElement.querySelector('.input-error');
+    if (!err) { err = document.createElement('div'); err.className = 'input-error'; err.style.cssText = 'color: #F44336; font-size: 12px; margin-top: 4px; font-weight: 500;'; inp.parentElement.appendChild(err); }
+    err.textContent = msg;
+}
+
+function clearAllInputErrors() {
+    document.querySelectorAll('.input-error').forEach(e => e.remove());
+    document.querySelectorAll('input, select').forEach(e => e.style.borderColor = '');
+}
+
+// ============== DATABASE ==============
+const DB_KEY = 'diamate_db_v1';
+function getDefaultDB() {
+    return { version: 1, profile: { id: uuid(), name: '', diabetesType: 'T1', units: 'mg/dL', targetLow: 70, targetHigh: 140, icr: 10, isf: 30, activeInsulinHours: 4, maxBolus: 15, age: null, gender: null, height: null, weight: null, activityLevel: null, setupComplete: false, createdAt: Date.now() }, glucose: [], meals: [], insulin: [] };
+}
+
+function initDB() {
+    let db = null;
+    try { const s = localStorage.getItem(DB_KEY); if (s) db = JSON.parse(s); } catch (e) {}
+    if (!db) { db = getDefaultDB(); saveDB(db); }
+    return db;
+}
+
+function getDB() { try { const s = localStorage.getItem(DB_KEY); if (s) return JSON.parse(s); } catch (e) {} return initDB(); }
+function saveDB(db) { try { localStorage.setItem(DB_KEY, JSON.stringify(db)); return true; } catch (e) { return false; } }
+function getProfile() { return getDB().profile; }
+function setProfile(patch) { const db = getDB(); db.profile = { ...db.profile, ...patch }; saveDB(db); return db.profile; }
+function addEntry(type, entry) { const db = getDB(); if (!['glucose', 'meals', 'insulin'].includes(type)) return null; const e = { id: uuid(), ts: Date.now(), ...entry }; db[type].push(e); saveDB(db); return e; }
+function updateEntry(type, id, patch) { const db = getDB(); const i = db[type].findIndex(e => e.id === id); if (i === -1) return null; db[type][i] = { ...db[type][i], ...patch }; saveDB(db); return db[type][i]; }
+function deleteEntry(type, id) { const db = getDB(); const i = db[type].findIndex(e => e.id === id); if (i === -1) return false; db[type].splice(i, 1); saveDB(db); return true; }
+function listEntries(type, opts = {}) { const db = getDB(); if (!['glucose', 'meals', 'insulin'].includes(type)) return []; let entries = [...db[type]]; if (opts.fromTs) entries = entries.filter(e => e.ts >= opts.fromTs); if (opts.toTs) entries = entries.filter(e => e.ts <= opts.toTs); entries.sort((a, b) => b.ts - a.ts); return entries; }
+function getLatestEntry(type) { const e = listEntries(type); return e.length > 0 ? e[0] : null; }
+function getTodayEntries(type) { const today = new Date(); today.setHours(0, 0, 0, 0); return listEntries(type, { fromTs: today.getTime() }); }
+function resetDB() { localStorage.removeItem(DB_KEY); return initDB(); }
+function downloadCSV(type, opts = {}) {
+    const entries = listEntries(type, opts);
+    if (!entries.length) return false;
+    let headers = [], rows = [];
+    if (type === 'glucose') { headers = ['Tarih', 'Saat', 'Değer', 'Bağlam', 'Not']; rows = entries.map(e => { const d = new Date(e.ts); return [d.toLocaleDateString('tr-TR'), d.toLocaleTimeString('tr-TR'), e.value, e.context || '', e.note || '']; }); }
+    else if (type === 'meals') { headers = ['Tarih', 'Saat', 'Kaynak', 'Karb', 'Yemekler', 'Not']; rows = entries.map(e => { const d = new Date(e.ts); return [d.toLocaleDateString('tr-TR'), d.toLocaleTimeString('tr-TR'), e.source || 'manual', e.estimatedCarbs, e.items?.map(i => i.name).join('; ') || '', e.note || '']; }); }
+    else { headers = ['Tarih', 'Saat', 'Tip', 'Ünite', 'Sebep', 'Not']; rows = entries.map(e => { const d = new Date(e.ts); return [d.toLocaleDateString('tr-TR'), d.toLocaleTimeString('tr-TR'), e.insulinType || 'rapid', e.units, e.reason || '', e.note || '']; }); }
+    const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `diamate_${type}_${new Date().toISOString().split('T')[0]}.csv`; link.click();
+    return true;
+}
+
+// ============== AI ASSISTANT ==============
+const API_PROVIDERS = {
+    groq: { name: 'Groq', baseUrl: 'https://api.groq.com/openai/v1/chat/completions', model: 'llama-3.1-8b-instant', keyPrefix: 'gsk_' },
+    openrouter: { name: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1/chat/completions', model: 'meta-llama/llama-3.1-8b-instruct:free', keyPrefix: 'sk-or-' },
+    openai: { name: 'OpenAI', baseUrl: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o-mini', keyPrefix: 'sk-' }
+};
+const AI_MEMORY_KEY = 'diamate_ai_memory', API_KEY_STORAGE = 'diamate_ai_api_key', API_PROVIDER_STORAGE = 'diamate_ai_provider';
+
+function detectProvider(key) { if (!key) return null; if (key.startsWith('gsk_')) return 'groq'; if (key.startsWith('sk-or-')) return 'openrouter'; if (key.startsWith('sk-')) return 'openai'; return 'groq'; }
+function getApiKey() { return localStorage.getItem(API_KEY_STORAGE) || ''; }
+function setApiKey(key) { localStorage.setItem(API_KEY_STORAGE, key); const p = detectProvider(key); if (p) localStorage.setItem(API_PROVIDER_STORAGE, p); }
+function getProvider() { return localStorage.getItem(API_PROVIDER_STORAGE) || 'groq'; }
+function hasApiKey() { return !!getApiKey(); }
+function getAIMemory() { try { const s = localStorage.getItem(AI_MEMORY_KEY); if (s) return JSON.parse(s); } catch (e) {} return { conversations: [], lastAnalysis: null }; }
+function saveAIMemory(m) { try { localStorage.setItem(AI_MEMORY_KEY, JSON.stringify(m)); } catch (e) {} }
+function clearConversationHistory() { const m = getAIMemory(); m.conversations = []; saveAIMemory(m); }
+function getConversationHistory(limit = 10) { return getAIMemory().conversations.slice(-limit); }
+function saveConversation(user, bot) { const m = getAIMemory(); m.conversations.push({ ts: Date.now(), user, bot }); if (m.conversations.length > 50) m.conversations = m.conversations.slice(-50); saveAIMemory(m); }
+
+function buildUserContext() {
+    const p = getProfile(), todayG = getTodayEntries('glucose'), todayM = getTodayEntries('meals'), todayI = getTodayEntries('insulin'), weekG = listEntries('glucose', { fromTs: daysAgo(7) }), latest = getLatestEntry('glucose');
+    const todayVals = todayG.map(g => g.value), weekVals = weekG.map(g => g.value);
+    const todayAvg = todayVals.length ? Math.round(mean(todayVals)) : null, weekAvg = weekVals.length ? Math.round(mean(weekVals)) : null, weekSD = weekVals.length > 2 ? Math.round(stdDev(weekVals)) : null;
+    const inRange = todayVals.filter(v => v >= 70 && v <= 180).length, tir = todayVals.length ? Math.round((inRange / todayVals.length) * 100) : null;
+    const totalCarbs = todayM.reduce((s, m) => s + (m.estimatedCarbs || 0), 0), totalInsulin = todayI.filter(i => i.insulinType === 'rapid').reduce((s, i) => s + (i.units || 0), 0);
+    let ctx = `## User Profile:\n- Name: ${p.name || 'Not set'}\n- Age: ${p.age || 'Not set'}\n- Diabetes Type: ${p.diabetesType || 'Not set'}\n- Target Range: ${p.targetLow || 70}-${p.targetHigh || 140} mg/dL\n- ICR: 1:${p.icr || 10}\n- ISF: 1:${p.isf || 30}\n\n## Today's Data:\n- Glucose readings: ${todayG.length}\n- Today's average: ${todayAvg ? todayAvg + ' mg/dL' : 'No data'}\n- Time in range: ${tir !== null ? tir + '%' : 'No data'}\n- Total carbs: ${totalCarbs}g\n- Total rapid insulin: ${totalInsulin}u\n`;
+    if (latest) { const status = getGlucoseStatus(latest.value), mins = Math.round((Date.now() - latest.ts) / 60000); ctx += `\n## Latest Glucose:\n- Value: ${latest.value} mg/dL (${status})\n- Time: ${mins} minutes ago\n`; }
+    if (weekAvg) ctx += `\n## 7-Day Stats:\n- Average: ${weekAvg} mg/dL\n- Std Dev: ${weekSD} mg/dL\n`;
+    return ctx;
+}
+
+function getSystemPrompt() {
+    return `You are DiaMate AI, a friendly diabetes management assistant. Be warm, supportive, use emojis occasionally.
+
+SAFETY RULES:
+1. NEVER recommend specific insulin doses - say "use the dose calculator" or "consult your doctor"
+2. For hypoglycemia (<70 mg/dL), ALWAYS recommend immediate action: 15-20g fast carbs
+3. Always recommend consulting healthcare providers for medication changes
+
+Current User Context:
+${buildUserContext()}
+
+Respond in ${currentLang === 'en' ? 'English' : 'Turkish'}. Keep responses concise (2-4 paragraphs max).`;
+}
+
+async function callAI(messages) {
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error('API_KEY_MISSING');
+    const providerName = getProvider(), provider = API_PROVIDERS[providerName];
+    if (!provider) throw new Error('INVALID_PROVIDER');
+    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+    if (providerName === 'openrouter') { headers['HTTP-Referer'] = window.location.origin; headers['X-Title'] = 'DiaMate'; }
+    try {
+        const res = await fetch(provider.baseUrl, { method: 'POST', headers, body: JSON.stringify({ model: provider.model, messages, max_tokens: 1024, temperature: 0.7 }) });
+        const data = await res.json();
+        if (!res.ok) { if (res.status === 401 || res.status === 403) throw new Error('INVALID_API_KEY'); if (res.status === 429) throw new Error('RATE_LIMITED'); throw new Error(data.error?.message || `API Error: ${res.status}`); }
+        return data.choices[0].message.content;
+    } catch (e) { throw e; }
+}
+
+async function generateChatResponse(userMsg) {
+    const memory = getAIMemory(), history = memory.conversations.slice(-5).flatMap(c => [{ role: 'user', content: c.user }, { role: 'assistant', content: c.bot }]);
+    const messages = [{ role: 'system', content: getSystemPrompt() }, ...history, { role: 'user', content: userMsg }];
+    try { return await callAI(messages); }
+    catch (e) {
+        if (e.message === 'API_KEY_MISSING') return t('⚠️ Lütfen önce AI API anahtarınızı ayarlayın. Ayarlar simgesine dokunun.', '⚠️ Please set up your AI API key first. Tap the settings icon.');
+        if (e.message === 'INVALID_API_KEY') return t('❌ Geçersiz API anahtarı. Ayarlardan kontrol edin.', '❌ Invalid API key. Check in settings.');
+        if (e.message === 'RATE_LIMITED') return t('⏳ Çok fazla istek. Biraz bekleyin.', '⏳ Too many requests. Please wait.');
+        return t(`❌ Hata: ${e.message}`, `❌ Error: ${e.message}`);
+    }
+}
+
+function getSmartSuggestions() {
+    const suggestions = [], todayG = getTodayEntries('glucose'), latest = getLatestEntry('glucose'), hour = new Date().getHours();
+    if (hour >= 6 && hour < 9 && !todayG.length) suggestions.push({ type: 'reminder', icon: '🌅', text: t('Günaydın! Açlık glukoz zamanı.', 'Good morning! Time for fasting glucose.'), prompt: t('Açlık glukozum ne olmalı?', 'What should my fasting glucose be?') });
+    if (latest && latest.value < 80) suggestions.push({ type: 'warning', icon: '⚠️', text: t('Glukozunuz düşüyor', 'Your glucose is getting low'), prompt: t('Glukozum düşük, ne yapmalıyım?', 'My glucose is low, what should I do?') });
+    if (latest && latest.value > 200) suggestions.push({ type: 'warning', icon: '📈', text: t('Glukozunuz yüksek', 'Your glucose is high'), prompt: t('Glukozum yüksek, nasıl düşürürüm?', 'My glucose is high, how can I lower it?') });
+    if (!suggestions.length) suggestions.push({ type: 'tip', icon: '💡', text: t('Diyabet hakkında her şeyi sorabilirsiniz', 'Ask me anything about diabetes'), prompt: t('Daha iyi glukoz kontrolü için ipuçları ver', 'Give me tips for better glucose control') });
+    return suggestions.slice(0, 3);
+}
+
+function getPersonalizedGreeting() {
+    const p = getProfile(), name = p.name?.split(' ')[0] || '', hour = new Date().getHours();
+    let greet = currentLang === 'en' ? (hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening') : (hour < 12 ? 'Günaydın' : hour < 18 ? 'İyi günler' : 'İyi akşamlar');
+    const g = name ? `${greet}, ${name}!` : `${greet}!`;
+    return currentLang === 'en' ? `${g} 👋 I'm your DiaMate AI assistant. How can I help you today?` : `${g} 👋 Ben DiaMate AI asistanınızım. Bugün size nasıl yardımcı olabilirim?`;
+}
+
+// ============== ROUTER ==============
+const routeScreenMap = { setup: 'setupScreen', login: 'loginScreen', dashboard: 'dashboardScreen', log: 'glucoseScreen', analyze: 'photoScreen', dose: 'doseScreen', reports: 'reportsScreen', chat: 'chatScreen', profile: 'profileScreen' };
+const navRouteMap = { navHome: 'dashboard', navGlucose: 'log', navChat: 'chat', navReports: 'reports', navProfile: 'profile' };
+const routeNavMap = { dashboard: 'navHome', log: 'navGlucose', analyze: 'navGlucose', chat: 'navChat', reports: 'navReports', profile: 'navProfile' };
+
+function navigateTo(route, subroute = null) {
+    const [mainRoute, sub] = route.includes(':') ? route.split(':') : [route, subroute];
+    if (!routeScreenMap[mainRoute]) return;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const screenId = routeScreenMap[mainRoute], screen = document.getElementById(screenId);
+    const mainApp = document.getElementById('mainApp'), loginScreen = document.getElementById('loginScreen'), setupScreen = document.getElementById('setupScreen');
+    if (mainRoute === 'login') { loginScreen?.classList.add('active'); mainApp?.classList.remove('active'); setupScreen?.classList.remove('active'); }
+    else if (mainRoute === 'setup') { setupScreen?.classList.add('active'); mainApp?.classList.remove('active'); loginScreen?.classList.remove('active'); }
+    else { mainApp?.classList.add('active'); loginScreen?.classList.remove('active'); setupScreen?.classList.remove('active'); if (screen) screen.classList.add('active'); }
+    document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('active'); b.style.color = 'var(--text-secondary)'; });
+    const navId = routeNavMap[mainRoute];
+    if (navId) { const btn = document.getElementById(navId); if (btn) { btn.classList.add('active'); btn.style.color = 'var(--primary)'; } }
+    currentRoute = mainRoute; currentSubroute = sub;
+    handleRouteChange(mainRoute, sub);
+}
+
+function handleRouteChange(route, subroute) {
+    switch (route) {
+        case 'dashboard': renderDashboard(); break;
+        case 'log': renderLogView(); break;
+        case 'dose': renderDoseCalculator(); break;
+        case 'analyze': renderAnalyzeView(); break;
+        case 'reports': renderReportsView(); break;
+        case 'chat': renderChatView(); break;
+        case 'profile': renderProfileView(); break;
+    }
+}
+
+// ============== DASHBOARD VIEW ==============
+function renderDashboard() {
+    const container = document.getElementById('dashboardScreen');
+    if (!container) return;
+    const latest = getLatestEntry('glucose'), todayG = getTodayEntries('glucose'), todayM = getTodayEntries('meals'), todayI = getTodayEntries('insulin');
+    const totalCarbs = todayM.reduce((s, m) => s + (m.estimatedCarbs || 0), 0);
+    const totalInsulin = todayI.filter(i => i.insulinType === 'rapid').reduce((s, i) => s + (i.units || 0), 0);
+    const p = getProfile(), bmi = p.height && p.weight ? (p.weight / Math.pow(p.height / 100, 2)).toFixed(1) : '--';
+    
+    let glucoseValue = '--', glucoseColor = 'var(--success)', statusText = t('Henüz glukoz ölçümü yok', 'No glucose readings yet'), trendHtml = `<span style="font-size: 18px;">?</span><span style="font-size: 13px; font-weight: 700; color: var(--text-secondary);">${t('Veri yok', 'No data')}</span>`;
+    if (latest) {
+        glucoseValue = latest.value;
+        const status = getGlucoseStatus(latest.value);
+        glucoseColor = getStatusColor(status);
+        const timeSince = formatRelativeTime(latest.ts);
+        statusText = status === 'low' ? t('⚠️ Düşük - Hemen karbonhidrat alın!', '⚠️ Low - Take carbs immediately!') : status === 'high' ? t('⚠️ Yüksek - İnsülin dozunuzu kontrol edin', '⚠️ High - Check your insulin dose') : t('✓ Hedef aralıkta - Harika!', '✓ In target range - Great!');
+        statusText += ` • ${timeSince}`;
+        const recentG = listEntries('glucose', { fromTs: Date.now() - 4 * 60 * 60 * 1000 });
+        let trendIcon = '→', trendText = t('Stabil', 'Stable');
+        if (recentG.length >= 2) { const diff = recentG[0].value - recentG[1].value; if (diff > 20) { trendIcon = '↑'; trendText = t('Yükseliyor', 'Rising'); } else if (diff < -20) { trendIcon = '↓'; trendText = t('Düşüyor', 'Falling'); } }
+        trendHtml = `<span style="font-size: 18px;">${trendIcon}</span><span style="font-size: 13px; font-weight: 700; color: ${glucoseColor};">${trendText}</span>`;
+    }
+    
+    container.innerHTML = `
+        <div style="background: white; padding: 24px; border-radius: 24px; margin-bottom: 16px; box-shadow: var(--shadow); position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; right: 0; width: 120px; height: 120px; background: linear-gradient(135deg, rgba(46,125,50,0.1) 0%, transparent 70%); border-radius: 0 0 0 100%;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <div>
+                    <div style="font-size: 13px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;" data-tr="Mevcut Glukoz" data-en="Current Glucose">${t('Mevcut Glukoz', 'Current Glucose')}</div>
+                    <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 8px;">
+                        <span style="font-size: 52px; font-weight: 800; color: ${glucoseColor};">${glucoseValue}</span>
+                        <span style="font-size: 18px; color: var(--text-secondary); font-weight: 600;">mg/dL</span>
+                    </div>
+                </div>
+                <div style="background: ${glucoseColor}15; padding: 8px 14px; border-radius: 12px; display: flex; align-items: center; gap: 6px;">${trendHtml}</div>
+            </div>
+            <div style="background: ${glucoseColor}15; color: ${glucoseColor}; padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; text-align: center;">${statusText}</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+            <div style="background: white; padding: 18px 12px; border-radius: 18px; text-align: center; box-shadow: var(--shadow);"><div style="font-size: 26px; font-weight: 800; color: var(--primary);">${totalCarbs}g</div><div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-top: 4px; text-transform: uppercase;">${t('Karbonhidrat', 'Carbs')}</div></div>
+            <div style="background: white; padding: 18px 12px; border-radius: 18px; text-align: center; box-shadow: var(--shadow);"><div style="font-size: 26px; font-weight: 800; color: var(--info);">${totalInsulin}u</div><div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-top: 4px; text-transform: uppercase;">${t('İnsülin', 'Insulin')}</div></div>
+            <div style="background: white; padding: 18px 12px; border-radius: 18px; text-align: center; box-shadow: var(--shadow);"><div style="font-size: 26px; font-weight: 800; color: var(--accent);">${todayM.length}</div><div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-top: 4px; text-transform: uppercase;">${t('Öğün', 'Meals')}</div></div>
+        </div>
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 24px; margin-bottom: 16px; color: white; cursor: pointer; box-shadow: 0 4px 20px rgba(102,126,234,0.4);" onclick="navigateTo('chat')">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px;">🤖</div>
+                <div style="flex: 1;"><div style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">${t('AI Asistanınız', 'Your AI Assistant')}</div><div style="font-size: 13px; opacity: 0.9;">${t('Sohbet etmek için tıklayın', 'Tap to chat')}</div></div>
+                <div style="font-size: 24px; opacity: 0.8;">→</div>
+            </div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 24px; margin-bottom: 16px; box-shadow: var(--shadow);">
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">${t('Hızlı İşlemler', 'Quick Actions')}</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                <button onclick="navigateTo('log','add-glucose')" style="background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); border: none; padding: 16px 8px; border-radius: 16px; cursor: pointer;"><div style="font-size: 28px; margin-bottom: 6px;">🩸</div><div style="font-size: 11px; font-weight: 700; color: var(--primary);">${t('Glukoz', 'Glucose')}</div></button>
+                <button onclick="navigateTo('log','add-meal')" style="background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%); border: none; padding: 16px 8px; border-radius: 16px; cursor: pointer;"><div style="font-size: 28px; margin-bottom: 6px;">🍽️</div><div style="font-size: 11px; font-weight: 700; color: #E65100;">${t('Öğün', 'Meal')}</div></button>
+                <button onclick="navigateTo('analyze')" style="background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); border: none; padding: 16px 8px; border-radius: 16px; cursor: pointer;"><div style="font-size: 28px; margin-bottom: 6px;">📸</div><div style="font-size: 11px; font-weight: 700; color: #1565C0;">${t('Analiz', 'Analyze')}</div></button>
+                <button onclick="navigateTo('dose')" style="background: linear-gradient(135deg, #FCE4EC 0%, #F8BBD9 100%); border: none; padding: 16px 8px; border-radius: 16px; cursor: pointer;"><div style="font-size: 28px; margin-bottom: 6px;">💉</div><div style="font-size: 11px; font-weight: 700; color: #AD1457;">${t('Doz', 'Dose')}</div></button>
+            </div>
+        </div>
+        <div style="background: white; padding: 20px; border-radius: 24px; margin-bottom: 16px; box-shadow: var(--shadow);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div><div style="font-size: 13px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">${t('Vücut Kitle İndeksi', 'Body Mass Index')}</div><div style="display: flex; align-items: baseline; gap: 8px; margin-top: 6px;"><span style="font-size: 36px; font-weight: 800; color: var(--success);">${bmi}</span><span style="font-size: 14px; color: var(--text-secondary);">kg/m²</span></div></div>
+                <div style="background: rgba(76,175,80,0.1); color: var(--success); padding: 10px 18px; border-radius: 14px; font-size: 14px; font-weight: 700;">${bmi !== '--' && bmi < 18.5 ? t('Zayıf', 'Underweight') : bmi >= 25 && bmi < 30 ? t('Fazla Kilolu', 'Overweight') : bmi >= 30 ? t('Obez', 'Obese') : t('Normal', 'Normal')}</div>
+            </div>
+        </div>
+    `;
+}
+
+// ============== LOG VIEW ==============
+function renderLogView() {
+    const subroute = currentSubroute;
+    if (subroute === 'add-glucose' || subroute === 'edit-glucose') { currentTab = 'glucose'; renderGlucoseForm(subroute === 'edit-glucose'); }
+    else if (subroute === 'add-meal' || subroute === 'edit-meal') { currentTab = 'meals'; renderMealForm(subroute === 'edit-meal'); }
+    else if (subroute === 'add-insulin' || subroute === 'edit-insulin') { currentTab = 'insulin'; renderInsulinForm(subroute === 'edit-insulin'); }
+    else renderLogHub();
+}
+
+function renderLogHub() {
+    const container = document.getElementById('glucoseScreen');
+    if (!container) return;
+    const entries = listEntries(currentTab);
+    const addTexts = { glucose: t('Glukoz Ekle', 'Add Glucose'), meals: t('Öğün Ekle', 'Add Meal'), insulin: t('İnsülin Ekle', 'Add Insulin') };
+    const listTitles = { glucose: t('Glukoz Geçmişi', 'Glucose History'), meals: t('Öğün Geçmişi', 'Meal History'), insulin: t('İnsülin Geçmişi', 'Insulin History') };
+    const emptyTexts = { glucose: { icon: '🩸', title: t('Glukoz kaydı yok', 'No glucose records'), desc: t('İlk ölçümünüzü ekleyin', 'Add your first reading') }, meals: { icon: '🍽️', title: t('Öğün kaydı yok', 'No meal records'), desc: t('İlk öğününüzü kaydedin', 'Log your first meal') }, insulin: { icon: '💉', title: t('İnsülin kaydı yok', 'No insulin records'), desc: t('İlk dozunuzu kaydedin', 'Log your first dose') } };
+    
+    let listHtml = '';
+    if (!entries.length) {
+        const e = emptyTexts[currentTab];
+        listHtml = `<div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);"><div style="font-size: 48px; margin-bottom: 12px;">${e.icon}</div><div style="font-weight: 600; margin-bottom: 6px;">${e.title}</div><div style="font-size: 13px;">${e.desc}</div></div>`;
+    } else {
+        entries.slice(0, 20).forEach(entry => {
+            if (currentTab === 'glucose') {
+                const status = getGlucoseStatus(entry.value), color = getStatusColor(status);
+                const contextLabels = { fasting: t('Açlık', 'Fasting'), before: t('Yemek Öncesi', 'Before Meal'), after: t('Yemek Sonrası', 'After Meal'), bedtime: t('Yatmadan Önce', 'Bedtime'), random: t('Rastgele', 'Random') };
+                listHtml += `<div class="entry-item" data-id="${entry.id}" style="display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--background); border-radius: 14px; margin-bottom: 10px; cursor: pointer;"><div style="width: 50px; height: 50px; background: ${color}15; border-radius: 14px; display: flex; align-items: center; justify-content: center;"><span style="font-size: 20px; font-weight: 800; color: ${color};">${entry.value}</span></div><div style="flex: 1;"><div style="font-weight: 600;">${entry.value} mg/dL</div><div style="font-size: 12px; color: var(--text-secondary);">${contextLabels[entry.context] || t('Ölçüm', 'Reading')} • ${formatRelativeTime(entry.ts)}</div></div><button class="delete-btn" data-id="${entry.id}" style="width: 36px; height: 36px; border: none; background: rgba(244,67,54,0.1); border-radius: 10px; color: #F44336; font-size: 16px; cursor: pointer;">✕</button></div>`;
+            } else if (currentTab === 'meals') {
+                listHtml += `<div class="entry-item" data-id="${entry.id}" style="display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--background); border-radius: 14px; margin-bottom: 10px; cursor: pointer;"><div style="width: 50px; height: 50px; background: rgba(255,152,0,0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🍽️</div><div style="flex: 1;"><div style="font-weight: 600;">${entry.items?.[0]?.name || t('Öğün', 'Meal')}</div><div style="font-size: 12px; color: var(--text-secondary);">${entry.estimatedCarbs}g ${t('karb', 'carbs')} • ${formatRelativeTime(entry.ts)}</div></div><button class="delete-btn" data-id="${entry.id}" style="width: 36px; height: 36px; border: none; background: rgba(244,67,54,0.1); border-radius: 10px; color: #F44336; font-size: 16px; cursor: pointer;">✕</button></div>`;
+            } else {
+                listHtml += `<div class="entry-item" data-id="${entry.id}" style="display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--background); border-radius: 14px; margin-bottom: 10px; cursor: pointer;"><div style="width: 50px; height: 50px; background: rgba(33,150,243,0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px;">💉</div><div style="flex: 1;"><div style="font-weight: 600;">${entry.insulinType === 'rapid' ? t('Hızlı', 'Rapid') : t('Bazal', 'Basal')} ${t('İnsülin', 'Insulin')}</div><div style="font-size: 12px; color: var(--text-secondary);">${entry.units}u • ${formatRelativeTime(entry.ts)}</div></div><button class="delete-btn" data-id="${entry.id}" style="width: 36px; height: 36px; border: none; background: rgba(244,67,54,0.1); border-radius: 10px; color: #F44336; font-size: 16px; cursor: pointer;">✕</button></div>`;
+            }
+        });
+    }
+    
+    container.innerHTML = `
+        <div style="background: white; border-radius: 24px; overflow: hidden; box-shadow: var(--shadow); margin-bottom: 16px;">
+            <div style="display: flex; border-bottom: 1px solid var(--border);">
+                <button class="log-tab" data-tab="glucose" style="flex: 1; padding: 16px; border: none; background: ${currentTab === 'glucose' ? 'var(--primary)' : 'white'}; color: ${currentTab === 'glucose' ? 'white' : 'var(--text-secondary)'}; font-weight: 700; font-size: 14px; cursor: pointer;">🩸 ${t('Glukoz', 'Glucose')}</button>
+                <button class="log-tab" data-tab="meals" style="flex: 1; padding: 16px; border: none; background: ${currentTab === 'meals' ? 'var(--primary)' : 'white'}; color: ${currentTab === 'meals' ? 'white' : 'var(--text-secondary)'}; font-weight: 700; font-size: 14px; cursor: pointer;">🍽️ ${t('Öğün', 'Meal')}</button>
+                <button class="log-tab" data-tab="insulin" style="flex: 1; padding: 16px; border: none; background: ${currentTab === 'insulin' ? 'var(--primary)' : 'white'}; color: ${currentTab === 'insulin' ? 'white' : 'var(--text-secondary)'}; font-weight: 700; font-size: 14px; cursor: pointer;">💉 ${t('İnsülin', 'Insulin')}</button>
+            </div>
+            <div style="padding: 16px;"><button id="addEntryBtn" style="width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;"><span style="font-size: 20px;">+</span><span>${addTexts[currentTab]}</span></button></div>
+        </div>
+        <div style="background: white; border-radius: 24px; box-shadow: var(--shadow); padding: 20px;"><div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">${listTitles[currentTab]}</div><div id="entryList">${listHtml}</div></div>
+    `;
+    
+    document.querySelectorAll('.log-tab').forEach(tab => tab.addEventListener('click', () => { currentTab = tab.dataset.tab; renderLogHub(); }));
+    document.getElementById('addEntryBtn')?.addEventListener('click', () => { const routes = { glucose: 'add-glucose', meals: 'add-meal', insulin: 'add-insulin' }; navigateTo('log', routes[currentTab]); });
+    document.querySelectorAll('.entry-item').forEach(item => item.addEventListener('click', e => { if (e.target.classList.contains('delete-btn')) return; editingEntry = item.dataset.id; const routes = { glucose: 'edit-glucose', meals: 'edit-meal', insulin: 'edit-insulin' }; navigateTo('log', routes[currentTab]); }));
+    document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); const id = btn.dataset.id; showConfirm(t('Kaydı Sil', 'Delete Record'), t('Bu kaydı silmek istediğinizden emin misiniz?', 'Are you sure you want to delete this record?'), () => { deleteEntry(currentTab, id); createToast('success', t('Kayıt silindi', 'Record deleted')); renderLogHub(); renderDashboard(); }); }));
+}
+
+function renderGlucoseForm(isEdit = false) {
+    const container = document.getElementById('glucoseScreen');
+    if (!container) return;
+    let entry = null;
+    if (isEdit && editingEntry) { const entries = listEntries('glucose'); entry = entries.find(e => e.id === editingEntry); }
+    container.innerHTML = `
+        <div style="background: white; padding: 24px; border-radius: 24px; box-shadow: var(--shadow);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;"><button id="backBtn" style="width: 40px; height: 40px; border: none; background: var(--background); border-radius: 12px; font-size: 18px; cursor: pointer;">←</button><div style="font-size: 20px; font-weight: 700;">${isEdit ? t('Glukoz Düzenle', 'Edit Glucose') : t('Glukoz Ekle', 'Add Glucose')}</div></div>
+            <div class="input-group" style="margin-bottom: 18px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('GLUKOZ DEĞERİ (mg/dL)', 'GLUCOSE VALUE (mg/dL)')}</label><input type="number" id="glucoseValue" class="input" value="${entry?.value || ''}" placeholder="120" style="font-size: 24px; text-align: center; font-weight: 700; padding: 16px;"></div>
+            <div class="input-group" style="margin-bottom: 18px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('ÖLÇÜM ZAMANI', 'MEASUREMENT CONTEXT')}</label><select id="glucoseContext" class="input" style="padding: 16px;"><option value="fasting" ${entry?.context === 'fasting' ? 'selected' : ''}>${t('Açlık (Sabah)', 'Fasting (Morning)')}</option><option value="before" ${entry?.context === 'before' ? 'selected' : ''}>${t('Yemek Öncesi', 'Before Meal')}</option><option value="after" ${entry?.context === 'after' ? 'selected' : ''}>${t('Yemek Sonrası', 'After Meal')}</option><option value="bedtime" ${entry?.context === 'bedtime' ? 'selected' : ''}>${t('Yatmadan Önce', 'Bedtime')}</option><option value="random" ${entry?.context === 'random' ? 'selected' : ''}>${t('Rastgele', 'Random')}</option></select></div>
+            <div class="input-group" style="margin-bottom: 18px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('NOT (Opsiyonel)', 'NOTE (Optional)')}</label><input type="text" id="glucoseNote" class="input" value="${entry?.note || ''}" placeholder="${t('Egzersiz sonrası, stresli gün vb.', 'After exercise, stressful day, etc.')}" style="padding: 16px;"></div>
+            <button id="btnSaveGlucose" style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;">${isEdit ? t('Güncelle', 'Update') : t('Kaydet', 'Save')}</button>
+        </div>
+    `;
+    document.getElementById('backBtn')?.addEventListener('click', () => navigateTo('log'));
+    document.getElementById('btnSaveGlucose')?.addEventListener('click', () => {
+        clearAllInputErrors();
+        const v = validateNumeric(document.getElementById('glucoseValue').value, 20, 600);
+        if (!v.valid) { showInputError('glucoseValue', v.error); return; }
+        const data = { value: v.value, context: document.getElementById('glucoseContext').value, note: document.getElementById('glucoseNote').value };
+        if (isEdit && entry?.id) { updateEntry('glucose', entry.id, data); createToast('success', t('Glukoz güncellendi', 'Glucose updated')); }
+        else { addEntry('glucose', data); createToast('success', t('Glukoz kaydedildi', 'Glucose saved')); }
+        editingEntry = null; navigateTo('log'); renderDashboard();
+    });
+}
+
+function renderMealForm(isEdit = false) {
+    const container = document.getElementById('glucoseScreen');
+    if (!container) return;
+    let entry = null;
+    if (isEdit && editingEntry) { const entries = listEntries('meals'); entry = entries.find(e => e.id === editingEntry); }
+    container.innerHTML = `
+        <div style="background: white; padding: 24px; border-radius: 24px; box-shadow: var(--shadow);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;"><button id="backBtn" style="width: 40px; height: 40px; border: none; background: var(--background); border-radius: 12px; font-size: 18px; cursor: pointer;">←</button><div style="font-size: 20px; font-weight: 700;">${isEdit ? t('Öğün Düzenle', 'Edit Meal') : t('Öğün Ekle', 'Add Meal')}</div></div>
+            <div class="input-group" style="margin-bottom: 18px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('YEMEK ADI', 'MEAL NAME')}</label><input type="text" id="mealName" class="input" value="${entry?.items?.[0]?.name || ''}" placeholder="${t('Pilav, tavuk, salata...', 'Rice, chicken, salad...')}" style="padding: 16px;"></div>
+            <div class="input-group" style="margin-bottom: 18px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('TAHMİNİ KARBONHİDRAT (g)', 'ESTIMATED CARBS (g)')}</label><input type="number" id="mealCarbs" class="input" value="${entry?.estimatedCarbs || ''}" placeholder="45" style="font-size: 20px; text-align: center; font-weight: 600; padding: 16px;"></div>
+            <div class="input-group" style="margin-bottom: 18px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('NOT (Opsiyonel)', 'NOTE (Optional)')}</label><input type="text" id="mealNote" class="input" value="${entry?.note || ''}" placeholder="${t('Restoranda, ev yemeği vb.', 'At restaurant, home cooked, etc.')}" style="padding: 16px;"></div>
+            <button id="btnSaveMeal" style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;">${isEdit ? t('Güncelle', 'Update') : t('Kaydet', 'Save')}</button>
+            <div style="text-align: center; margin-top: 16px;"><button id="goPhotoBtn" style="background: none; border: none; color: var(--primary); font-weight: 600; cursor: pointer; font-size: 14px;">📸 ${t('Fotoğraf ile analiz et', 'Analyze with photo')}</button></div>
+        </div>
+    `;
+    document.getElementById('backBtn')?.addEventListener('click', () => navigateTo('log'));
+    document.getElementById('goPhotoBtn')?.addEventListener('click', () => navigateTo('analyze'));
+    document.getElementById('btnSaveMeal')?.addEventListener('click', () => {
+        clearAllInputErrors();
+        const name = document.getElementById('mealName').value.trim();
+        if (!name) { showInputError('mealName', t('Yemek adı girin', 'Enter meal name')); return; }
+        const v = validateNumeric(document.getElementById('mealCarbs').value, 0, 500);
+        if (!v.valid) { showInputError('mealCarbs', v.error); return; }
+        const data = { source: 'manual', items: [{ name, carbs: v.value }], estimatedCarbs: v.value, note: document.getElementById('mealNote').value };
+        if (isEdit && entry?.id) { updateEntry('meals', entry.id, data); createToast('success', t('Öğün güncellendi', 'Meal updated')); }
+        else { addEntry('meals', data); createToast('success', t('Öğün kaydedildi', 'Meal saved')); }
+        editingEntry = null; navigateTo('log'); renderDashboard();
+    });
+}
+
+function renderInsulinForm(isEdit = false) {
+    const container = document.getElementById('glucoseScreen');
+    if (!container) return;
+    let entry = null;
+    if (isEdit && editingEntry) { const entries = listEntries('insulin'); entry = entries.find(e => e.id === editingEntry); }
+    container.innerHTML = `
+        <div style="background: white; padding: 24px; border-radius: 24px; box-shadow: var(--shadow);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;"><button id="backBtn" style="width: 40px; height: 40px; border: none; background: var(--background); border-radius: 12px; font-size: 18px; cursor: pointer;">←</button><div style="font-size: 20px; font-weight: 700;">${isEdit ? t('İnsülin Düzenle', 'Edit Insulin') : t('İnsülin Ekle', 'Add Insulin')}</div></div>
+            <div class="input-group" style="margin-bottom: 18px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('İNSÜLİN TİPİ', 'INSULIN TYPE')}</label><select id="insulinType" class="input" style="padding: 16px;"><option value="rapid" ${entry?.insulinType === 'rapid' ? 'selected' : ''}>${t('Hızlı Etkili (Bolus)', 'Rapid Acting (Bolus)')}</option><option value="basal" ${entry?.insulinType === 'basal' ? 'selected' : ''}>${t('Bazal (Uzun Etkili)', 'Basal (Long Acting)')}</option></select></div>
+            <div class="input-group" style="margin-bottom: 18px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('ÜNİTE', 'UNITS')}</label><input type="number" id="insulinUnits" class="input" value="${entry?.units || ''}" placeholder="6" step="0.5" style="font-size: 24px; text-align: center; font-weight: 700; padding: 16px;"></div>
+            <div class="input-group" style="margin-bottom: 18px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('SEBEP', 'REASON')}</label><select id="insulinReason" class="input" style="padding: 16px;"><option value="meal" ${entry?.reason === 'meal' ? 'selected' : ''}>${t('Öğün', 'Meal')}</option><option value="correction" ${entry?.reason === 'correction' ? 'selected' : ''}>${t('Düzeltme', 'Correction')}</option><option value="both" ${entry?.reason === 'both' ? 'selected' : ''}>${t('Öğün + Düzeltme', 'Meal + Correction')}</option><option value="basal" ${entry?.reason === 'basal' ? 'selected' : ''}>${t('Bazal Doz', 'Basal Dose')}</option></select></div>
+            <div class="input-group" style="margin-bottom: 18px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('NOT (Opsiyonel)', 'NOTE (Optional)')}</label><input type="text" id="insulinNote" class="input" value="${entry?.note || ''}" placeholder="${t('Ek bilgi...', 'Additional info...')}" style="padding: 16px;"></div>
+            <button id="btnSaveInsulin" style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;">${isEdit ? t('Güncelle', 'Update') : t('Kaydet', 'Save')}</button>
+        </div>
+    `;
+    document.getElementById('backBtn')?.addEventListener('click', () => navigateTo('log'));
+    document.getElementById('btnSaveInsulin')?.addEventListener('click', () => {
+        clearAllInputErrors();
+        const v = validateNumeric(document.getElementById('insulinUnits').value, 0.5, 100);
+        if (!v.valid) { showInputError('insulinUnits', v.error); return; }
+        const data = { insulinType: document.getElementById('insulinType').value, units: v.value, reason: document.getElementById('insulinReason').value, note: document.getElementById('insulinNote').value };
+        if (isEdit && entry?.id) { updateEntry('insulin', entry.id, data); createToast('success', t('İnsülin güncellendi', 'Insulin updated')); }
+        else { addEntry('insulin', data); createToast('success', t('İnsülin kaydedildi', 'Insulin saved')); }
+        editingEntry = null; navigateTo('log'); renderDashboard();
+    });
+}
+
+// ============== DOSE CALCULATOR ==============
+let calculatedDose = null;
+function calculateIOB(profile) {
+    const activeHours = profile.activeInsulinHours || 4, cutoff = Date.now() - activeHours * 60 * 60 * 1000;
+    const recent = listEntries('insulin', { fromTs: cutoff }).filter(i => i.insulinType === 'rapid');
+    let iob = 0;
+    recent.forEach(e => { const elapsed = (Date.now() - e.ts) / (60 * 60 * 1000); iob += e.units * Math.max(0, 1 - elapsed / activeHours); });
+    return roundToIncrement(iob, 0.1);
+}
+
+function renderDoseCalculator() {
+    const container = document.getElementById('doseScreen');
+    if (!container) return;
+    const p = getProfile(), latest = getLatestEntry('glucose'), latestMeal = getLatestEntry('meals');
+    const defaultG = latest?.value || '', defaultC = latestMeal && (Date.now() - latestMeal.ts < 30 * 60 * 1000) ? latestMeal.estimatedCarbs : '';
+    container.innerHTML = `
+        <div style="background: white; padding: 24px; border-radius: 24px; box-shadow: var(--shadow);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;"><div style="width: 44px; height: 44px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px;">💉</div><div style="font-size: 20px; font-weight: 700;">${t('İnsülin Doz Hesaplayıcı', 'Insulin Dose Calculator')}</div></div>
+            <div style="background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%); padding: 14px; border-radius: 14px; margin-bottom: 20px; border: 1px solid rgba(255,152,0,0.3);"><div style="display: flex; align-items: flex-start; gap: 10px;"><span style="font-size: 20px;">⚠️</span><div style="font-size: 12px; color: #BF360C; line-height: 1.4;"><strong>${t('Önemli:', 'Important:')}</strong> ${t('Bu hesaplama sadece referans amaçlıdır. Doktorunuza danışın.', 'This calculation is for reference only. Consult your doctor.')}</div></div></div>
+            <div class="input-group" style="margin-bottom: 16px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('MEVCUT KAN ŞEKERİ (mg/dL)', 'CURRENT BLOOD SUGAR (mg/dL)')}</label><input type="number" id="doseGlucose" class="input" value="${defaultG}" placeholder="180" style="font-size: 20px; text-align: center; font-weight: 600; padding: 14px;"></div>
+            <div class="input-group" style="margin-bottom: 16px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('YİYECEĞİNİZ KARBONHİDRAT (g)', 'CARBS YOU WILL EAT (g)')}</label><input type="number" id="doseCarbs" class="input" value="${defaultC}" placeholder="60" style="font-size: 20px; text-align: center; font-weight: 600; padding: 14px;"></div>
+            <div class="input-group" style="margin-bottom: 16px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('GLUKOZ TRENDİ', 'GLUCOSE TREND')}</label><select id="glucoseTrend" class="input" style="padding: 14px;"><option value="stable">→ ${t('Stabil', 'Stable')}</option><option value="rising">↑ ${t('Yükseliyor', 'Rising')}</option><option value="falling">↓ ${t('Düşüyor', 'Falling')}</option></select></div>
+            <button id="btnCalculate" style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;">${t('Dozu Hesapla', 'Calculate Dose')}</button>
+            <div id="doseResult"></div>
+        </div>
+    `;
+    document.getElementById('btnCalculate')?.addEventListener('click', calculateDose);
+}
+
+function calculateDose() {
+    clearAllInputErrors();
+    const gV = validateNumeric(document.getElementById('doseGlucose').value, 20, 600);
+    if (!gV.valid) { showInputError('doseGlucose', gV.error); return; }
+    const cV = validateNumeric(document.getElementById('doseCarbs').value, 0, 500);
+    if (!cV.valid) { showInputError('doseCarbs', cV.error); return; }
+    const glucose = gV.value, carbs = cV.value, trend = document.getElementById('glucoseTrend').value;
+    const p = getProfile(), resultEl = document.getElementById('doseResult');
+    
+    if (isHypo(glucose) && SafetyPolicy.blockWhenBelowHypo) {
+        resultEl.innerHTML = `<div style="margin-top: 20px; background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%); padding: 24px; border-radius: 20px; border: 2px solid #F44336;"><div style="text-align: center;"><div style="font-size: 48px; margin-bottom: 12px;">🚨</div><div style="font-size: 20px; font-weight: 800; color: #C62828; margin-bottom: 12px;">${t('HİPOGLİSEMİ UYARISI', 'HYPOGLYCEMIA WARNING')}</div><div style="font-size: 14px; color: #B71C1C; line-height: 1.5; margin-bottom: 16px;">${t(`Kan şekeriniz ${glucose} mg/dL ile düşük.`, `Your blood sugar is low at ${glucose} mg/dL.`)}<br><strong>${t('İnsülin uygulamayın!', 'Do NOT take insulin!')}</strong></div><div style="background: white; padding: 16px; border-radius: 14px; text-align: left;"><div style="font-weight: 700; color: #C62828; margin-bottom: 10px;">${t('Hemen yapmanız gerekenler:', 'What to do immediately:')}</div><div style="font-size: 14px; color: #424242; line-height: 1.6;">${t('1. 15-20g hızlı karbonhidrat alın<br>2. 15 dakika bekleyin<br>3. Tekrar ölçün', '1. Take 15-20g fast carbs<br>2. Wait 15 minutes<br>3. Check again')}</div></div></div></div>`;
+        return;
+    }
+    
+    const icr = p.icr || 10, isf = p.isf || 30, targetMid = ((p.targetLow || 70) + (p.targetHigh || 140)) / 2, maxBolus = p.maxBolus || 15;
+    const mealBolus = carbs / icr;
+    let correctionBolus = Math.max(0, (glucose - targetMid) / isf);
+    if (trend === 'falling') correctionBolus *= SafetyPolicy.trendDownCorrectionMultiplier;
+    const iob = calculateIOB(p);
+    let suggested = mealBolus + correctionBolus - iob;
+    suggested = Math.max(0, suggested);
+    suggested = roundToIncrement(suggested, 0.5);
+    calculatedDose = suggested;
+    const isAboveMax = suggested > maxBolus, finalDose = isAboveMax ? maxBolus : suggested;
+    
+    let html = `<div style="margin-top: 20px;"><div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 28px; border-radius: 24px; color: white; text-align: center; margin-bottom: 16px;"><div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">${t('Hesaplanan Doz', 'Calculated Dose')}</div><div style="font-size: 56px; font-weight: 800;">${finalDose.toFixed(1)}</div><div style="font-size: 18px; opacity: 0.9;">${t('ünite insülin', 'units insulin')}</div></div>`;
+    if (isAboveMax) html += `<div style="background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%); padding: 16px; border-radius: 16px; margin-bottom: 16px; border: 2px solid #FF9800;"><div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;"><span style="font-size: 24px;">⚠️</span><span style="font-weight: 700; color: #E65100;">${t('Maksimum Doz Sınırı', 'Maximum Dose Limit')}</span></div><div style="font-size: 13px; color: #BF360C; line-height: 1.4;">${t(`Hesaplanan doz (${calculatedDose.toFixed(1)}u) maksimum limitinizi (${maxBolus}u) aşıyor.`, `Calculated dose (${calculatedDose.toFixed(1)}u) exceeds your max limit (${maxBolus}u).`)}</div><label style="display: flex; align-items: center; gap: 10px; margin-top: 12px; cursor: pointer;"><input type="checkbox" id="ackMaxDose" style="width: 20px; height: 20px;"><span style="font-size: 13px; color: #E65100;">${t('Bu dozu anladım ve onaylıyorum', 'I understand and confirm this dose')}</span></label></div>`;
+    html += `<div style="background: white; padding: 20px; border-radius: 20px; box-shadow: var(--shadow);"><div style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">${t('Hesaplama Detayları', 'Calculation Details')}</div><div style="display: flex; justify-content: space-between; padding: 12px; background: var(--background); border-radius: 12px; margin-bottom: 8px;"><span style="color: var(--text-secondary);">${t('Öğün Dozu', 'Meal Dose')}</span><span style="font-weight: 700; color: var(--primary);">${mealBolus.toFixed(1)}u</span></div><div style="display: flex; justify-content: space-between; padding: 12px; background: var(--background); border-radius: 12px; margin-bottom: 8px;"><span style="color: var(--text-secondary);">${t('Düzeltme Dozu', 'Correction Dose')}</span><span style="font-weight: 700; color: var(--info);">${correctionBolus.toFixed(1)}u</span></div><div style="display: flex; justify-content: space-between; padding: 12px; background: var(--background); border-radius: 12px; margin-bottom: 8px;"><span style="color: var(--text-secondary);">${t('Aktif İnsülin (IOB)', 'Active Insulin (IOB)')}</span><span style="font-weight: 700; color: var(--warning);">-${iob.toFixed(1)}u</span></div><div style="border-top: 2px solid var(--border); margin-top: 12px; padding-top: 12px;"><div style="display: flex; justify-content: space-between; padding: 12px; background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); border-radius: 12px;"><span style="font-weight: 700; color: var(--primary);">${t('Toplam', 'Total')}</span><span style="font-weight: 800; color: var(--primary);">${finalDose.toFixed(1)}u</span></div></div></div><button id="recordDoseBtn" style="width: 100%; margin-top: 16px; padding: 16px; background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;"><span style="font-size: 20px;">💉</span><span>${t('Bu Dozu Kaydet', 'Record This Dose')}</span></button></div>`;
+    resultEl.innerHTML = html;
+    
+    document.getElementById('recordDoseBtn')?.addEventListener('click', () => {
+        if (isAboveMax && SafetyPolicy.requireAcknowledgementAboveMax && !document.getElementById('ackMaxDose')?.checked) { createToast('warning', t('Lütfen maksimum doz uyarısını onaylayın', 'Please confirm the max dose warning')); return; }
+        if (SafetyPolicy.requireTwoStepConfirmForRecording) { showConfirm(t('Doz Kaydı', 'Dose Record'), t(`${finalDose.toFixed(1)} ünite hızlı insülin kaydedilecek. Onaylıyor musunuz?`, `${finalDose.toFixed(1)} units rapid insulin will be recorded. Confirm?`), () => recordDose(finalDose)); }
+        else recordDose(finalDose);
+    });
+}
+
+function recordDose(units) {
+    addEntry('insulin', { insulinType: 'rapid', units, reason: 'both', note: t('Doz hesaplayıcıdan', 'From dose calculator') });
+    createToast('success', t(`${units.toFixed(1)} ünite insülin kaydedildi`, `${units.toFixed(1)} units insulin recorded`));
+    renderDashboard();
+    document.getElementById('doseResult').innerHTML = `<div style="margin-top: 20px; background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); padding: 24px; border-radius: 20px; text-align: center;"><div style="font-size: 48px; margin-bottom: 12px;">✓</div><div style="font-size: 18px; font-weight: 700; color: var(--primary);">${t('Doz Kaydedildi!', 'Dose Recorded!')}</div><div style="font-size: 14px; color: var(--text-secondary); margin-top: 8px;">${units.toFixed(1)} ${t('ünite hızlı insülin', 'units rapid insulin')}</div></div>`;
+}
+
+// ============== ANALYZE VIEW ==============
+const foodDatabase = [
+    { name: 'Pilav', carbs: 45, confidence: 92 }, { name: 'Makarna', carbs: 55, confidence: 89 }, { name: 'Ekmek (2 dilim)', carbs: 25, confidence: 94 },
+    { name: 'Tavuk (ızgara)', carbs: 0, confidence: 91 }, { name: 'Salata', carbs: 8, confidence: 88 }, { name: 'Patates kızartması', carbs: 40, confidence: 90 },
+    { name: 'Mercimek çorbası', carbs: 22, confidence: 87 }, { name: 'Döner', carbs: 35, confidence: 85 }, { name: 'Lahmacun', carbs: 35, confidence: 93 },
+    { name: 'Pide', carbs: 55, confidence: 91 }, { name: 'Köfte', carbs: 8, confidence: 89 }, { name: 'Börek', carbs: 32, confidence: 86 }
+];
+
+function renderAnalyzeView() {
+    const container = document.getElementById('photoScreen');
+    if (!container) return;
+    container.innerHTML = `
+        <div style="background: white; padding: 24px; border-radius: 24px; box-shadow: var(--shadow);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;"><div style="width: 44px; height: 44px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px;">🤖</div><div style="font-size: 20px; font-weight: 700;">${t('AI Yemek Analizi', 'AI Food Analysis')}</div></div>
+            <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; line-height: 1.5;">${t('Yemeğinizin fotoğrafını çekin, yapay zeka besin değerlerini tahmin etsin.', 'Take a photo of your food, AI will estimate nutritional values.')}</p>
+            <div style="background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(33,150,243,0.3);"><div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #1565C0;"><span>ℹ️</span><span><strong>${t('Demo Modu:', 'Demo Mode:')}</strong> ${t('Simüle edilmiş sonuçlar gösterilmektedir.', 'Simulated results are shown.')}</span></div></div>
+            <div id="photoUpload" style="border: 2px dashed var(--border); border-radius: 20px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.3s; background: var(--background);"><div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;"><span style="font-size: 36px;">📸</span></div><div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">${t('Fotoğraf Yükle', 'Upload Photo')}</div><div style="font-size: 13px; color: var(--text-secondary);">${t('Tıklayın veya sürükleyip bırakın', 'Click or drag and drop')}</div></div>
+            <input type="file" id="photoInput" accept="image/*" style="display: none;">
+            <div id="photoPreview" style="display: none; margin-top: 20px;"><div style="position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 16px;"><img id="previewImage" style="width: 100%; max-height: 250px; object-fit: cover;"><button id="btnRemovePhoto" style="position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.6); border: none; color: white; font-size: 18px; cursor: pointer;">✕</button></div><button id="btnAnalyze" style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;"><span style="font-size: 20px;">🤖</span><span>${t('AI Analizi Başlat', 'Start AI Analysis')}</span></button></div>
+            <div id="analysisLoading" style="display: none; text-align: center; padding: 40px 20px;"><div style="width: 60px; height: 60px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div><div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${t('AI Analiz Ediyor...', 'AI Analyzing...')}</div></div>
+            <div id="analysisResult"></div>
+        </div>
+    `;
+    document.getElementById('photoUpload')?.addEventListener('click', () => document.getElementById('photoInput')?.click());
+    document.getElementById('photoInput')?.addEventListener('change', e => {
+        const file = e.target.files?.[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => { document.getElementById('previewImage').src = ev.target.result; document.getElementById('photoPreview').style.display = 'block'; document.getElementById('photoUpload').style.display = 'none'; document.getElementById('analysisResult').innerHTML = ''; };
+        reader.readAsDataURL(file);
+    });
+    document.getElementById('btnRemovePhoto')?.addEventListener('click', () => { document.getElementById('photoPreview').style.display = 'none'; document.getElementById('photoUpload').style.display = 'block'; document.getElementById('photoInput').value = ''; document.getElementById('analysisResult').innerHTML = ''; analysisResult = null; });
+    document.getElementById('btnAnalyze')?.addEventListener('click', runDemoAnalysis);
+}
+
+function runDemoAnalysis() {
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('analysisLoading').style.display = 'block';
+    setTimeout(() => {
+        document.getElementById('analysisLoading').style.display = 'none';
+        const numItems = 2 + Math.floor(Math.random() * 2), items = [], usedIdx = new Set();
+        for (let i = 0; i < numItems; i++) { let idx; do { idx = Math.floor(Math.random() * foodDatabase.length); } while (usedIdx.has(idx)); usedIdx.add(idx); const f = foodDatabase[idx]; items.push({ name: f.name, carbs: f.carbs, confidence: f.confidence - Math.floor(Math.random() * 5) }); }
+        const totalCarbs = items.reduce((s, i) => s + i.carbs, 0), avgConf = Math.round(items.reduce((s, i) => s + i.confidence, 0) / items.length);
+        analysisResult = { items, estimatedCarbs: totalCarbs, confidence: avgConf };
+        renderAnalysisResult();
+    }, 2000);
+}
+
+function renderAnalysisResult() {
+    const resultEl = document.getElementById('analysisResult');
+    if (!resultEl || !analysisResult) return;
+    const { items, estimatedCarbs, confidence } = analysisResult;
+    let html = `<div style="margin-top: 20px;"><div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 24px; border-radius: 20px; color: white; text-align: center; margin-bottom: 16px;"><div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">${t('Toplam Karbonhidrat', 'Total Carbohydrates')}</div><div style="display: flex; align-items: center; justify-content: center; gap: 8px;"><input type="number" id="editTotalCarbs" value="${estimatedCarbs}" style="width: 100px; font-size: 40px; font-weight: 800; text-align: center; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4); border-radius: 12px; color: white; padding: 8px;"><span style="font-size: 24px;">g</span></div><div style="font-size: 13px; opacity: 0.8; margin-top: 8px;">${t('Güven:', 'Confidence:')} ${confidence}%</div></div><div style="background: white; padding: 20px; border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 16px;"><div style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;"><span>🤖</span> ${t('Tespit Edilen Yemekler', 'Detected Foods')}</div>`;
+    items.forEach((item, i) => { html += `<div style="display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--background); border-radius: 14px; margin-bottom: 10px;"><div style="flex: 1;"><div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">${item.name}</div><div style="font-size: 12px; color: var(--text-secondary);">${item.confidence}% ${t('güven', 'confidence')}</div></div><div style="display: flex; align-items: center; gap: 4px;"><input type="number" class="item-carbs" data-index="${i}" value="${item.carbs}" style="width: 60px; padding: 8px; text-align: center; font-weight: 700; border: 2px solid var(--border); border-radius: 10px; font-size: 16px;"><span style="color: var(--text-secondary);">g</span></div></div>`; });
+    html += `</div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;"><button id="saveMealBtn" style="padding: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer;">💾 ${t('Öğün Kaydet', 'Save Meal')}</button><button id="calcDoseBtn" style="padding: 16px; background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer;">💉 ${t('Doz Hesapla', 'Calculate Dose')}</button></div></div>`;
+    resultEl.innerHTML = html;
+    document.querySelectorAll('.item-carbs').forEach(inp => inp.addEventListener('change', () => { let total = 0; document.querySelectorAll('.item-carbs').forEach((i, idx) => { const c = parseInt(i.value) || 0; if (analysisResult?.items[idx]) analysisResult.items[idx].carbs = c; total += c; }); analysisResult.estimatedCarbs = total; document.getElementById('editTotalCarbs').value = total; }));
+    document.getElementById('editTotalCarbs')?.addEventListener('change', e => { analysisResult.estimatedCarbs = parseInt(e.target.value) || 0; });
+    document.getElementById('saveMealBtn')?.addEventListener('click', () => { if (!analysisResult) return; const totalCarbs = parseInt(document.getElementById('editTotalCarbs')?.value) || analysisResult.estimatedCarbs; addEntry('meals', { source: 'photo', items: analysisResult.items.map(i => ({ name: i.name, carbs: i.carbs })), estimatedCarbs: totalCarbs, confidence: analysisResult.confidence, note: t('AI fotoğraf analizi', 'AI photo analysis') }); createToast('success', t('Öğün kaydedildi', 'Meal saved')); renderDashboard(); analysisResult = null; renderAnalyzeView(); });
+    document.getElementById('calcDoseBtn')?.addEventListener('click', () => { if (!analysisResult) return; const totalCarbs = parseInt(document.getElementById('editTotalCarbs')?.value) || analysisResult.estimatedCarbs; navigateTo('dose'); setTimeout(() => { const inp = document.getElementById('doseCarbs'); if (inp) inp.value = totalCarbs; }, 100); });
+}
+
+// ============== REPORTS VIEW ==============
+let selectedDays = 7;
+function renderReportsView() {
+    const container = document.getElementById('reportsScreen');
+    if (!container) return;
+    const fromTs = daysAgo(selectedDays), gEntries = listEntries('glucose', { fromTs }), mEntries = listEntries('meals', { fromTs }), iEntries = listEntries('insulin', { fromTs });
+    const gVals = gEntries.map(g => g.value), avgG = Math.round(mean(gVals)) || 0, sdG = Math.round(stdDev(gVals)) || 0;
+    const inRange = gVals.filter(v => v >= 70 && v <= 180).length, hypoCount = gVals.filter(v => v < 70).length, hyperCount = gVals.filter(v => v > 180).length;
+    const tirPercent = gVals.length ? Math.round((inRange / gVals.length) * 100) : 0;
+    const estA1c = avgG > 0 ? ((avgG + 46.7) / 28.7).toFixed(1) : '--';
+    const totalCarbs = mEntries.reduce((s, m) => s + (m.estimatedCarbs || 0), 0);
+    const totalInsulin = iEntries.filter(i => i.insulinType === 'rapid').reduce((s, i) => s + (i.units || 0), 0);
+    
+    container.innerHTML = `
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <button class="period-btn" data-days="7" style="flex: 1; padding: 12px; border: 2px solid ${selectedDays === 7 ? 'var(--primary)' : 'var(--border)'}; background: ${selectedDays === 7 ? 'var(--primary)' : 'white'}; color: ${selectedDays === 7 ? 'white' : 'var(--text-secondary)'}; border-radius: 12px; font-weight: 700; cursor: pointer;">${t('7 Gün', '7 Days')}</button>
+            <button class="period-btn" data-days="14" style="flex: 1; padding: 12px; border: 2px solid ${selectedDays === 14 ? 'var(--primary)' : 'var(--border)'}; background: ${selectedDays === 14 ? 'var(--primary)' : 'white'}; color: ${selectedDays === 14 ? 'white' : 'var(--text-secondary)'}; border-radius: 12px; font-weight: 700; cursor: pointer;">${t('14 Gün', '14 Days')}</button>
+            <button class="period-btn" data-days="30" style="flex: 1; padding: 12px; border: 2px solid ${selectedDays === 30 ? 'var(--primary)' : 'var(--border)'}; background: ${selectedDays === 30 ? 'var(--primary)' : 'white'}; color: ${selectedDays === 30 ? 'white' : 'var(--text-secondary)'}; border-radius: 12px; font-weight: 700; cursor: pointer;">${t('30 Gün', '30 Days')}</button>
+        </div>
+        <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 24px; border-radius: 24px; margin-bottom: 16px; color: white;">
+            <div style="font-size: 14px; opacity: 0.9; font-weight: 600; margin-bottom: 16px;">${t(`Son ${selectedDays} Gün Özeti`, `Last ${selectedDays} Days Summary`)}</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                <div style="text-align: center;"><div style="font-size: 32px; font-weight: 800;">${avgG || '--'}</div><div style="font-size: 12px; opacity: 0.9;">${t('Ort. Glukoz', 'Avg. Glucose')}</div></div>
+                <div style="text-align: center;"><div style="font-size: 32px; font-weight: 800;">${tirPercent}%</div><div style="font-size: 12px; opacity: 0.9;">${t('Hedefte', 'In Range')}</div></div>
+                <div style="text-align: center;"><div style="font-size: 32px; font-weight: 800;">${estA1c}</div><div style="font-size: 12px; opacity: 0.9;">${t('Tah. A1c', 'Est. A1c')}</div></div>
+            </div>
+        </div>
+        <div style="background: white; padding: 24px; border-radius: 24px; margin-bottom: 16px; box-shadow: var(--shadow);">
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">${t('Glukoz Dağılımı', 'Glucose Distribution')}</div>
+            ${gVals.length ? `<div style="display: flex; gap: 4px; height: 24px; border-radius: 12px; overflow: hidden; margin-bottom: 16px;"><div style="width: ${Math.round((hypoCount / gVals.length) * 100)}%; background: var(--error); min-width: ${hypoCount > 0 ? '4px' : '0'};"></div><div style="width: ${tirPercent}%; background: var(--success);"></div><div style="width: ${Math.round((hyperCount / gVals.length) * 100)}%; background: var(--warning); min-width: ${hyperCount > 0 ? '4px' : '0'};"></div></div><div style="display: flex; justify-content: space-between; font-size: 12px;"><div style="display: flex; align-items: center; gap: 6px;"><div style="width: 10px; height: 10px; background: var(--error); border-radius: 50%;"></div><span>${t('Düşük', 'Low')} ${hypoCount}</span></div><div style="display: flex; align-items: center; gap: 6px;"><div style="width: 10px; height: 10px; background: var(--success); border-radius: 50%;"></div><span>${t('Hedefte', 'In Range')} ${inRange}</span></div><div style="display: flex; align-items: center; gap: 6px;"><div style="width: 10px; height: 10px; background: var(--warning); border-radius: 50%;"></div><span>${t('Yüksek', 'High')} ${hyperCount}</span></div></div>` : `<div style="text-align: center; padding: 20px; color: var(--text-secondary);"><div style="font-size: 32px; margin-bottom: 8px;">📊</div><div>${t('Bu dönemde glukoz verisi yok', 'No glucose data for this period')}</div></div>`}
+        </div>
+        <div style="background: white; padding: 24px; border-radius: 24px; margin-bottom: 16px; box-shadow: var(--shadow);">
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">${t('İstatistikler', 'Statistics')}</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="background: var(--background); padding: 16px; border-radius: 16px; text-align: center;"><div style="font-size: 24px; font-weight: 800; color: var(--primary);">${gVals.length}</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${t('Glukoz Ölçümü', 'Glucose Readings')}</div></div>
+                <div style="background: var(--background); padding: 16px; border-radius: 16px; text-align: center;"><div style="font-size: 24px; font-weight: 800; color: var(--info);">±${sdG}</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${t('Std. Sapma', 'Std. Dev.')}</div></div>
+                <div style="background: var(--background); padding: 16px; border-radius: 16px; text-align: center;"><div style="font-size: 24px; font-weight: 800; color: var(--accent);">${totalCarbs}g</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${t('Toplam Karb', 'Total Carbs')}</div></div>
+                <div style="background: var(--background); padding: 16px; border-radius: 16px; text-align: center;"><div style="font-size: 24px; font-weight: 800; color: var(--success);">${totalInsulin}u</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${t('Toplam İnsülin', 'Total Insulin')}</div></div>
+            </div>
+        </div>
+        <div style="background: white; padding: 24px; border-radius: 24px; box-shadow: var(--shadow);">
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">${t('Veri Dışa Aktar', 'Export Data')}</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <button class="export-btn" data-type="glucose" style="padding: 14px 10px; background: var(--background); border: 2px solid var(--border); border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer;">🩸 ${t('Glukoz', 'Glucose')}</button>
+                <button class="export-btn" data-type="meals" style="padding: 14px 10px; background: var(--background); border: 2px solid var(--border); border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer;">🍽️ ${t('Öğün', 'Meals')}</button>
+                <button class="export-btn" data-type="insulin" style="padding: 14px 10px; background: var(--background); border: 2px solid var(--border); border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer;">💉 ${t('İnsülin', 'Insulin')}</button>
+            </div>
+        </div>
+    `;
+    document.querySelectorAll('.period-btn').forEach(btn => btn.addEventListener('click', () => { selectedDays = parseInt(btn.dataset.days); renderReportsView(); }));
+    document.querySelectorAll('.export-btn').forEach(btn => btn.addEventListener('click', () => { const type = btn.dataset.type, success = downloadCSV(type, { fromTs: daysAgo(selectedDays) }); if (success) createToast('success', t('CSV dosyası indirildi', 'CSV file downloaded')); else createToast('warning', t('Dışa aktarılacak veri yok', 'No data to export')); }));
+}
+
+// ============== CHAT VIEW ==============
+function renderChatView() {
+    const container = document.getElementById('chatScreen');
+    if (!container) return;
+    const history = getConversationHistory(20);
+    chatMessages = history.map(h => [{ type: 'user', text: h.user, ts: h.ts }, { type: 'bot', text: h.bot, ts: h.ts }]).flat();
+    if (!chatMessages.length) chatMessages.push({ type: 'bot', text: getPersonalizedGreeting(), ts: Date.now() });
+    const suggestions = getSmartSuggestions(), hasKey = hasApiKey();
+    
+    function escapeAttr(s) { return s.replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+    function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+    function formatBotMsg(t) { return escapeHtml(t).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
+    function renderMsgs() { return chatMessages.map(m => m.type === 'user' ? `<div style="display: flex; justify-content: flex-end; margin-bottom: 12px;"><div style="max-width: 85%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; border-radius: 18px 18px 4px 18px; font-size: 14px; line-height: 1.5;">${escapeHtml(m.text)}</div></div>` : `<div style="display: flex; gap: 10px; margin-bottom: 12px;"><div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">🤖</div><div style="max-width: 85%; background: white; padding: 12px 16px; border-radius: 18px 18px 18px 4px; font-size: 14px; line-height: 1.6; box-shadow: 0 1px 2px rgba(0,0,0,0.1); white-space: pre-wrap;">${formatBotMsg(m.text)}</div></div>`).join(''); }
+    
+    container.innerHTML = `
+        <div style="display: flex; flex-direction: column; height: calc(100vh - 180px); max-height: 600px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px 20px; border-radius: 24px 24px 0 0; color: white;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;"><div style="width: 44px; height: 44px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">🤖</div><div><div style="font-size: 16px; font-weight: 700;">DiaMate AI</div><div style="font-size: 12px; opacity: 0.9; display: flex; align-items: center; gap: 6px;"><span style="width: 8px; height: 8px; background: ${hasKey ? '#4CAF50' : '#FF9800'}; border-radius: 50%;"></span>${hasKey ? t('Bağlı', 'Connected') : t('Kurulum gerekli', 'Setup required')}</div></div></div>
+                    <div style="display: flex; gap: 8px;"><button id="clearChatBtn" title="${t('Sohbeti Temizle', 'Clear Chat')}" style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border: none; border-radius: 10px; color: white; font-size: 16px; cursor: pointer;">🗑️</button><button id="settingsBtn" title="${t('AI Ayarları', 'AI Settings')}" style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border: none; border-radius: 10px; color: white; font-size: 16px; cursor: pointer;">⚙️</button></div>
+                </div>
+            </div>
+            ${!hasKey ? `<div style="background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%); padding: 14px 16px; border-bottom: 1px solid #FFB74D;"><div style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 20px;">🔑</span><div style="flex: 1;"><div style="font-size: 13px; font-weight: 600; color: #E65100;">${t('AI API Anahtarı Gerekli', 'AI API Key Required')}</div><div style="font-size: 12px; color: #BF360C;">${t('Gerçek AI yanıtları için Groq API anahtarı ekleyin', 'Add Groq API key for real AI responses')}</div></div><button id="setupApiBtn" style="padding: 8px 14px; background: #E65100; color: white; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;">${t('Ayarla', 'Setup')}</button></div></div>` : ''}
+            ${suggestions.length ? `<div style="background: white; padding: 10px 16px; border-bottom: 1px solid var(--border);"><div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;">${suggestions.map(s => `<button class="suggestion-chip" data-prompt="${escapeAttr(s.prompt)}" style="flex-shrink: 0; padding: 8px 14px; background: ${s.type === 'warning' ? '#FFF3E0' : '#E3F2FD'}; border: 1px solid ${s.type === 'warning' ? '#FFB74D' : '#64B5F6'}; border-radius: 20px; font-size: 12px; font-weight: 600; color: ${s.type === 'warning' ? '#E65100' : '#1565C0'}; cursor: pointer; white-space: nowrap;">${s.icon} ${s.text.substring(0, 35)}${s.text.length > 35 ? '...' : ''}</button>`).join('')}</div></div>` : ''}
+            <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 16px; background: var(--background);">${renderMsgs()}</div>
+            <div id="typingIndicator" style="display: none; padding: 8px 16px; background: var(--background);"><div style="display: flex; align-items: center; gap: 8px;"><div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px;">🤖</div><div style="background: white; padding: 12px 16px; border-radius: 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);"><div class="typing-dots"><span></span><span></span><span></span></div></div><span style="font-size: 12px; color: var(--text-secondary);">${t('AI düşünüyor...', 'AI is thinking...')}</span></div></div>
+            <div style="background: white; padding: 10px 16px; border-top: 1px solid var(--border);"><div style="display: flex; gap: 6px; overflow-x: auto;"><button class="quick-ask" data-msg="${t('Bugün nasılım?', 'How am I doing today?')}" style="flex-shrink: 0; padding: 6px 12px; background: var(--background); border: 1px solid var(--border); border-radius: 14px; font-size: 12px; cursor: pointer;">📊 ${t('Durumum', 'Status')}</button><button class="quick-ask" data-msg="${t('Yemek önerileri ver', 'Give me meal suggestions')}" style="flex-shrink: 0; padding: 6px 12px; background: var(--background); border: 1px solid var(--border); border-radius: 14px; font-size: 12px; cursor: pointer;">🍽️ ${t('Yemek', 'Meals')}</button><button class="quick-ask" data-msg="${t('Düşük şekerde ne yapmalıyım?', 'What should I do for low blood sugar?')}" style="flex-shrink: 0; padding: 6px 12px; background: var(--background); border: 1px solid var(--border); border-radius: 14px; font-size: 12px; cursor: pointer;">🚨 ${t('Hipo', 'Hypo')}</button><button class="quick-ask" data-msg="${t('Yüksek şekeri nasıl düşürürüm?', 'How do I lower high blood sugar?')}" style="flex-shrink: 0; padding: 6px 12px; background: var(--background); border: 1px solid var(--border); border-radius: 14px; font-size: 12px; cursor: pointer;">📈 ${t('Hiper', 'Hyper')}</button></div></div>
+            <div style="background: white; padding: 12px 16px 16px; border-radius: 0 0 24px 24px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);"><div style="display: flex; gap: 10px; align-items: center;"><input type="text" id="chatInput" placeholder="${t('Mesajınızı yazın...', 'Type your message...')}" style="flex: 1; padding: 14px 18px; border: 2px solid var(--border); border-radius: 24px; font-size: 15px; outline: none; transition: border-color 0.2s;"><button id="sendBtn" style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 50%; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;">➤</button></div></div>
+        </div>
+    `;
+    
+    function scrollToBottom() { const c = document.getElementById('chatMessages'); if (c) setTimeout(() => c.scrollTop = c.scrollHeight, 50); }
+    function updateMsgs() { const c = document.getElementById('chatMessages'); if (c) c.innerHTML = renderMsgs(); }
+    function showTyping() { isTyping = true; const i = document.getElementById('typingIndicator'); if (i) i.style.display = 'block'; scrollToBottom(); }
+    function hideTyping() { isTyping = false; const i = document.getElementById('typingIndicator'); if (i) i.style.display = 'none'; }
+    
+    async function sendMessage() {
+        const inp = document.getElementById('chatInput'), msg = inp?.value?.trim();
+        if (!msg || isTyping) return;
+        chatMessages.push({ type: 'user', text: msg, ts: Date.now() }); inp.value = ''; updateMsgs(); scrollToBottom(); showTyping();
+        try { const res = await generateChatResponse(msg); hideTyping(); chatMessages.push({ type: 'bot', text: res, ts: Date.now() }); updateMsgs(); scrollToBottom(); saveConversation(msg, res); }
+        catch (e) { hideTyping(); chatMessages.push({ type: 'bot', text: t('Bir hata oluştu. Lütfen tekrar deneyin.', 'An error occurred. Please try again.'), ts: Date.now() }); updateMsgs(); scrollToBottom(); }
+    }
+    
+    document.getElementById('sendBtn')?.addEventListener('click', sendMessage);
+    document.getElementById('chatInput')?.addEventListener('keypress', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+    document.querySelectorAll('.quick-ask').forEach(btn => btn.addEventListener('click', () => { document.getElementById('chatInput').value = btn.dataset.msg; sendMessage(); }));
+    document.querySelectorAll('.suggestion-chip').forEach(chip => chip.addEventListener('click', () => { document.getElementById('chatInput').value = chip.dataset.prompt; sendMessage(); }));
+    document.getElementById('settingsBtn')?.addEventListener('click', showSettingsModal);
+    document.getElementById('setupApiBtn')?.addEventListener('click', showSettingsModal);
+    document.getElementById('clearChatBtn')?.addEventListener('click', () => { if (confirm(t('Sohbet geçmişini silmek istediğinizden emin misiniz?', 'Are you sure you want to clear chat history?'))) { clearConversationHistory(); chatMessages = []; chatMessages.push({ type: 'bot', text: getPersonalizedGreeting(), ts: Date.now() }); updateMsgs(); createToast('success', t('Sohbet temizlendi', 'Chat cleared')); } });
+    scrollToBottom();
+}
+
+function showSettingsModal() {
+    const currentKey = getApiKey(), currentProvider = getProvider();
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;';
+    overlay.innerHTML = `
+        <div style="background: white; border-radius: 24px; padding: 24px; max-width: 420px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;"><div style="font-size: 20px; font-weight: 700;">🤖 ${t('AI Ayarları', 'AI Settings')}</div><button id="closeSettingsModal" style="width: 36px; height: 36px; border: none; background: var(--background); border-radius: 10px; font-size: 18px; cursor: pointer;">✕</button></div>
+            <div style="margin-bottom: 20px;"><div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">${t('AI Sağlayıcı Seçin', 'Choose AI Provider')}</div>
+                <div style="background: #F0FDF4; border: 2px solid #22C55E; border-radius: 14px; padding: 14px; margin-bottom: 10px;"><div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;"><span style="font-size: 20px;">⚡</span><div><div style="font-weight: 700; color: #166534;">Groq ${t('(Önerilen)', '(Recommended)')}</div><div style="font-size: 12px; color: #15803D;">${t('Ücretsiz, çok hızlı', 'Free, very fast')}</div></div></div><div style="font-size: 12px; color: #166534; line-height: 1.4;">1. <a href="https://console.groq.com" target="_blank" style="color: #166534; font-weight: 600;">console.groq.com</a><br>2. ${t('Ücretsiz hesap oluştur', 'Create free account')}<br>3. API Keys → Create API Key<br>4. ${t('Key\'i kopyala (gsk_ ile başlar)', 'Copy key (starts with gsk_)')}</div></div>
+                <div style="background: #FEF3C7; border: 2px solid #F59E0B; border-radius: 14px; padding: 14px;"><div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;"><span style="font-size: 20px;">🌐</span><div><div style="font-weight: 700; color: #92400E;">OpenRouter</div><div style="font-size: 12px; color: #B45309;">${t('Ücretsiz modeller mevcut', 'Free models available')}</div></div></div><div style="font-size: 12px; color: #92400E; line-height: 1.4;">1. <a href="https://openrouter.ai/keys" target="_blank" style="color: #92400E; font-weight: 600;">openrouter.ai/keys</a><br>2. ${t('Google ile giriş yap', 'Sign in with Google')}<br>3. Create Key<br>4. ${t('Key\'i kopyala (sk-or- ile başlar)', 'Copy key (starts with sk-or_)')}</div></div>
+            </div>
+            <div class="input-group" style="margin-bottom: 20px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">API KEY</label><input type="text" id="apiKeyInput" class="input" value="${currentKey}" placeholder="gsk_... ${t('veya', 'or')} sk-or-..." style="padding: 14px; font-family: monospace; font-size: 13px;"><div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">${currentProvider ? `${t('Algılanan:', 'Detected:')} <strong>${currentProvider.toUpperCase()}</strong>` : t('Key girildiğinde otomatik algılanır', 'Auto-detected when key is entered')}</div></div>
+            <button id="saveApiKeyBtn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;">${t('Kaydet ve Test Et', 'Save and Test')}</button>
+            <div id="testResult" style="margin-top: 12px; display: none;"></div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('closeSettingsModal').onclick = () => overlay.remove();
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+    document.getElementById('saveApiKeyBtn').onclick = async () => {
+        const newKey = document.getElementById('apiKeyInput').value.trim(), testResult = document.getElementById('testResult'), saveBtn = document.getElementById('saveApiKeyBtn');
+        if (!newKey) { testResult.style.display = 'block'; testResult.innerHTML = `<div style="background: #FEE2E2; color: #DC2626; padding: 12px; border-radius: 10px; font-size: 13px;">❌ ${t('Lütfen API anahtarı girin', 'Please enter an API key')}</div>`; return; }
+        setApiKey(newKey); saveBtn.disabled = true; saveBtn.textContent = t('Test ediliyor...', 'Testing...'); testResult.style.display = 'block'; testResult.innerHTML = `<div style="background: #E0F2FE; color: #0369A1; padding: 12px; border-radius: 10px; font-size: 13px;">⏳ ${t('API bağlantısı test ediliyor...', 'Testing API connection...')}</div>`;
+        try {
+            const res = await generateChatResponse('Hello, just testing. Reply with OK.');
+            if (res.includes('❌') || res.includes('Error') || res.includes('Hata')) testResult.innerHTML = `<div style="background: #FEE2E2; color: #DC2626; padding: 12px; border-radius: 10px; font-size: 13px;">${res}</div>`;
+            else { testResult.innerHTML = `<div style="background: #D1FAE5; color: #065F46; padding: 12px; border-radius: 10px; font-size: 13px;">✅ ${t('Bağlantı başarılı! AI hazır.', 'Connection successful! AI is ready.')}</div>`; createToast('success', t('AI bağlantısı başarılı!', 'AI connection successful!')); setTimeout(() => { overlay.remove(); renderChatView(); }, 1500); }
+        } catch (e) { testResult.innerHTML = `<div style="background: #FEE2E2; color: #DC2626; padding: 12px; border-radius: 10px; font-size: 13px;">❌ ${e.message}</div>`; }
+        saveBtn.disabled = false; saveBtn.textContent = t('Kaydet ve Test Et', 'Save and Test');
+    };
+}
+
+// ============== PROFILE VIEW ==============
+function renderProfileView() {
+    const container = document.getElementById('profileScreen');
+    if (!container) return;
+    const p = getProfile();
+    const diabetesLabels = { T1: t('Tip 1 Diyabet', 'Type 1 Diabetes'), T2: t('Tip 2 Diyabet', 'Type 2 Diabetes'), type1: t('Tip 1 Diyabet', 'Type 1 Diabetes'), type2: t('Tip 2 Diyabet', 'Type 2 Diabetes'), gestational: t('Gebelik Diyabeti', 'Gestational Diabetes'), prediabetes: t('Prediyabet', 'Prediabetes'), Other: t('Diğer', 'Other') };
+    const genderIcon = p.gender === 'male' ? '👨' : p.gender === 'female' ? '👩' : '👤';
+    const bmi = p.height && p.weight ? (p.weight / Math.pow(p.height / 100, 2)).toFixed(1) : '--';
+    
+    container.innerHTML = `
+        <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 30px 24px; border-radius: 24px; margin-bottom: 16px; text-align: center; color: white;"><div style="width: 90px; height: 90px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 44px; margin: 0 auto 16px; border: 3px solid rgba(255,255,255,0.3);">${genderIcon}</div><div style="font-size: 24px; font-weight: 800;">${p.name || t('Kullanıcı', 'User')}</div><div style="font-size: 14px; opacity: 0.9; margin-top: 6px;">${diabetesLabels[p.diabetesType] || t('Diyabet', 'Diabetes')}</div></div>
+        <div style="background: white; padding: 24px; border-radius: 24px; margin-bottom: 16px; box-shadow: var(--shadow);">
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">${t('Kişisel Bilgiler', 'Personal Information')}</div>
+            <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--text-secondary); font-weight: 500;">${t('Ad Soyad', 'Full Name')}</span><span style="font-weight: 600; color: var(--text-primary);">${p.name || '-'}</span></div>
+            <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--text-secondary); font-weight: 500;">${t('Yaş', 'Age')}</span><span style="font-weight: 600; color: var(--text-primary);">${p.age ? p.age + ' ' + t('yaş', 'years') : '-'}</span></div>
+            <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--text-secondary); font-weight: 500;">${t('Boy', 'Height')}</span><span style="font-weight: 600; color: var(--text-primary);">${p.height ? p.height + ' cm' : '-'}</span></div>
+            <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--text-secondary); font-weight: 500;">${t('Kilo', 'Weight')}</span><span style="font-weight: 600; color: var(--text-primary);">${p.weight ? p.weight + ' kg' : '-'}</span></div>
+            <div style="display: flex; justify-content: space-between; padding: 14px 0;"><span style="color: var(--text-secondary); font-weight: 500;">BMI</span><span style="font-weight: 600; color: var(--text-primary);">${bmi} kg/m²</span></div>
+        </div>
+        <div style="background: white; padding: 24px; border-radius: 24px; margin-bottom: 16px; box-shadow: var(--shadow);">
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">${t('Diyabet Ayarları', 'Diabetes Settings')}</div>
+            <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--text-secondary); font-weight: 500;">${t('Diyabet Tipi', 'Diabetes Type')}</span><span style="font-weight: 600; color: var(--text-primary);">${diabetesLabels[p.diabetesType] || '-'}</span></div>
+            <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--text-secondary); font-weight: 500;">${t('Hedef Aralık', 'Target Range')}</span><span style="font-weight: 600; color: var(--text-primary);">${p.targetLow || 70} - ${p.targetHigh || 140} mg/dL</span></div>
+            <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--text-secondary); font-weight: 500;">ICR</span><span style="font-weight: 600; color: var(--text-primary);">1:${p.icr || 10}</span></div>
+            <div style="display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border);"><span style="color: var(--text-secondary); font-weight: 500;">ISF</span><span style="font-weight: 600; color: var(--text-primary);">1:${p.isf || 30}</span></div>
+            <div style="display: flex; justify-content: space-between; padding: 14px 0;"><span style="color: var(--text-secondary); font-weight: 500;">${t('Aktif İnsülin Süresi', 'Active Insulin Duration')}</span><span style="font-weight: 600; color: var(--text-primary);">${p.activeInsulinHours || 4} ${t('saat', 'hours')}</span></div>
+        </div>
+        <div style="background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); padding: 16px; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(33,150,243,0.3);"><div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 24px;">🔒</span><div><div style="font-weight: 700; color: #1565C0; margin-bottom: 4px;">${t('Veri Depolama: Sadece Yerel', 'Data Storage: Local Only')}</div><div style="font-size: 13px; color: #1976D2; line-height: 1.4;">${t('Tüm verileriniz bu cihazda güvenle saklanır.', 'All your data is stored securely on this device.')}</div></div></div></div>
+        <button id="btnEditProfile" style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px;"><span style="font-size: 18px;">✏️</span><span>${t('Profili Düzenle', 'Edit Profile')}</span></button>
+        <button id="btnReset" style="width: 100%; padding: 16px; background: rgba(244,67,54,0.1); color: var(--error); border: 2px solid rgba(244,67,54,0.3); border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;">${t('Tüm Verileri Sil ve Sıfırla', 'Delete All Data and Reset')}</button>
+    `;
+    document.getElementById('btnEditProfile')?.addEventListener('click', showEditProfileModal);
+    document.getElementById('btnReset')?.addEventListener('click', () => { showConfirm(t('Tüm Verileri Sil', 'Delete All Data'), t('Bu işlem tüm kayıtlarınızı kalıcı olarak silecektir. Bu işlem geri alınamaz!', 'This will permanently delete all your records. This action cannot be undone!'), () => { resetDB(); createToast('success', t('Tüm veriler silindi', 'All data deleted')); navigateTo('login'); }); });
+}
+
+function showEditProfileModal() {
+    const p = getProfile();
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 20px;';
+    overlay.innerHTML = `
+        <div style="background: white; border-radius: 24px; padding: 24px; max-width: 400px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;"><div style="font-size: 20px; font-weight: 700;">${t('Profili Düzenle', 'Edit Profile')}</div><button id="closeEditModal" style="width: 36px; height: 36px; border: none; background: var(--background); border-radius: 10px; font-size: 18px; cursor: pointer;">✕</button></div>
+            <div class="input-group" style="margin-bottom: 16px;"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('AD SOYAD', 'FULL NAME')}</label><input type="text" id="editName" class="input" value="${p.name || ''}" style="padding: 14px;"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;"><div class="input-group"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('YAŞ', 'AGE')}</label><input type="number" id="editAge" class="input" value="${p.age || ''}" style="padding: 14px;"></div><div class="input-group"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('CİNSİYET', 'GENDER')}</label><select id="editGender" class="input" style="padding: 14px;"><option value="">${t('Seçiniz', 'Select')}</option><option value="male" ${p.gender === 'male' ? 'selected' : ''}>${t('Erkek', 'Male')}</option><option value="female" ${p.gender === 'female' ? 'selected' : ''}>${t('Kadın', 'Female')}</option></select></div></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;"><div class="input-group"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('BOY (cm)', 'HEIGHT (cm)')}</label><input type="number" id="editHeight" class="input" value="${p.height || ''}" style="padding: 14px;"></div><div class="input-group"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('KİLO (kg)', 'WEIGHT (kg)')}</label><input type="number" id="editWeight" class="input" value="${p.weight || ''}" style="padding: 14px;"></div></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;"><div class="input-group"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('HEDEF DÜŞÜK', 'TARGET LOW')}</label><input type="number" id="editTargetLow" class="input" value="${p.targetLow || 70}" style="padding: 14px;"></div><div class="input-group"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('HEDEF YÜKSEK', 'TARGET HIGH')}</label><input type="number" id="editTargetHigh" class="input" value="${p.targetHigh || 140}" style="padding: 14px;"></div></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;"><div class="input-group"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">ICR (1:X)</label><input type="number" id="editICR" class="input" value="${p.icr || 10}" style="padding: 14px;"></div><div class="input-group"><label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">ISF (1:X)</label><input type="number" id="editISF" class="input" value="${p.isf || 30}" style="padding: 14px;"></div></div>
+            <button id="saveProfileBtn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;">${t('Kaydet', 'Save')}</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('closeEditModal').onclick = () => overlay.remove();
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+    document.getElementById('saveProfileBtn').onclick = () => {
+        const updates = { name: document.getElementById('editName').value.trim(), age: parseInt(document.getElementById('editAge').value) || null, gender: document.getElementById('editGender').value, height: parseInt(document.getElementById('editHeight').value) || null, weight: parseInt(document.getElementById('editWeight').value) || null, targetLow: parseInt(document.getElementById('editTargetLow').value) || 70, targetHigh: parseInt(document.getElementById('editTargetHigh').value) || 140, icr: parseInt(document.getElementById('editICR').value) || 10, isf: parseInt(document.getElementById('editISF').value) || 30 };
+        setProfile(updates); overlay.remove(); createToast('success', t('Profil güncellendi', 'Profile updated')); renderProfileView(); updateHeaderUI();
+    };
+}
+
+function updateHeaderUI() {
+    const p = getProfile(), hour = new Date().getHours();
+    let greet = currentLang === 'en' ? (hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening') : (hour < 12 ? 'Günaydın' : hour < 18 ? 'İyi günler' : 'İyi akşamlar');
+    const greetEl = document.getElementById('greeting'); if (greetEl) greetEl.textContent = greet;
+    const headerName = document.getElementById('headerName'); if (headerName && p.name) headerName.textContent = p.name.split(' ')[0];
+    const headerAvatar = document.getElementById('headerAvatar'); if (headerAvatar) headerAvatar.textContent = p.gender === 'male' ? '👨' : p.gender === 'female' ? '👩' : '👤';
+}
+
+// ============== INITIALIZATION ==============
+function initApp() {
+    console.log('DiaMate Pro Standalone initializing...');
+    initDB();
+    
+    // Wire setup flow
+    let currentStep = 1;
+    document.getElementById('btnStart')?.addEventListener('click', () => navigateTo('setup'));
+    document.getElementById('btnStep1Next')?.addEventListener('click', () => {
+        const name = document.getElementById('userName')?.value?.trim(), age = document.getElementById('userAge')?.value, gender = document.getElementById('userGender')?.value, height = document.getElementById('userHeight')?.value, weight = document.getElementById('userWeight')?.value;
+        if (!name || !age || !gender || !height || !weight) { createToast('warning', t('Lütfen tüm alanları doldurun', 'Please fill all fields')); return; }
+        setProfile({ name, age: parseInt(age), gender, height: parseInt(height), weight: parseInt(weight) });
+        goToStep(2);
+    });
+    document.getElementById('btnStep2Next')?.addEventListener('click', () => {
+        const diabetesType = document.getElementById('diabetesType')?.value, activityLevel = document.getElementById('activityLevel')?.value, targetRange = document.getElementById('targetRange')?.value;
+        if (!diabetesType || !activityLevel) { createToast('warning', t('Lütfen tüm alanları doldurun', 'Please fill all fields')); return; }
+        let targetLow = 70, targetHigh = 140;
+        if (targetRange) { const parts = targetRange.split('-'); targetLow = parseInt(parts[0]) || 70; targetHigh = parseInt(parts[1]) || 140; }
+        setProfile({ diabetesType: diabetesType === 'type1' ? 'T1' : diabetesType === 'type2' ? 'T2' : 'Other', activityLevel, targetLow, targetHigh });
+        goToStep(3);
+    });
+    document.getElementById('btnStep2Back')?.addEventListener('click', () => goToStep(1));
+    document.getElementById('btnStep3Back')?.addEventListener('click', () => goToStep(2));
+    document.getElementById('btnComplete')?.addEventListener('click', () => { setProfile({ setupComplete: true }); createToast('success', t('Kurulum tamamlandı!', 'Setup complete!')); navigateTo('dashboard'); updateHeaderUI(); });
+    
+    function goToStep(step) {
+        document.getElementById(`step${currentStep}`)?.classList.remove('active');
+        document.getElementById(`pStep${currentStep}`)?.classList.remove('active');
+        document.getElementById(`pStep${currentStep}`)?.classList.add('done');
+        if (currentStep < step && currentStep < 3) document.getElementById(`pLine${currentStep}`)?.classList.add('done');
+        currentStep = step;
+        document.getElementById(`step${step}`)?.classList.add('active');
+        document.getElementById(`pStep${step}`)?.classList.add('active');
+        document.getElementById(`pStep${step}`)?.classList.remove('done');
+    }
+    
+    // Health app connections (demo)
+    ['appleCard', 'googleCard', 'samsungCard', 'dexcomCard'].forEach(id => {
+        const card = document.getElementById(id);
+        if (card) card.addEventListener('click', () => { card.classList.toggle('connected'); const status = card.querySelector('.health-status'); if (status) { const isConn = card.classList.contains('connected'); status.textContent = isConn ? 'Bağlandı ✓' : 'Bağlan'; status.classList.toggle('connected', isConn); } });
+    });
+    
+    // Navigation
+    Object.entries(navRouteMap).forEach(([navId, route]) => { const btn = document.getElementById(navId); if (btn) btn.addEventListener('click', () => navigateTo(route)); });
+    
+    // Language switcher
+    document.getElementById('btnTR')?.addEventListener('click', () => setLanguage('tr'));
+    document.getElementById('btnEN')?.addEventListener('click', () => setLanguage('en'));
+    
+    // Check if setup complete
+    const p = getProfile();
+    if (p.setupComplete) { navigateTo('dashboard'); updateHeaderUI(); }
+    else navigateTo('login');
+    
+    console.log('DiaMate Pro Standalone ready!');
+}
+
+function setLanguage(lang) {
+    currentLang = lang;
+    document.getElementById('btnTR')?.classList.toggle('active', lang === 'tr');
+    document.getElementById('btnEN')?.classList.toggle('active', lang === 'en');
+    document.querySelectorAll('[data-tr][data-en]').forEach(el => el.textContent = el.getAttribute(`data-${lang}`));
+    updateHeaderUI();
+    handleRouteChange(currentRoute, currentSubroute);
+}
+
+// Start app
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp);
+else initApp();
+
+// Global exports for debugging
+window.DiaMate = { getProfile, setProfile, navigateTo, renderDashboard, SafetyPolicy };
+</script>
+</body>
+</html>

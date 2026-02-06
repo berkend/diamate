@@ -1,0 +1,22 @@
+{
+  "name": "diamate-backend",
+  "version": "1.0.0",
+  "description": "DiaMate Pro Backend - Netlify Functions",
+  "private": true,
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build step required'",
+    "test": "echo 'No tests configured'"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "jsonwebtoken": "^9.0.2",
+    "googleapis": "^130.0.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

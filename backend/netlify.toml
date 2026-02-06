@@ -1,0 +1,43 @@
+# DiaMate Pro - Netlify Configuration
+
+[build]
+  functions = "netlify/functions"
+  publish = "../"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["netlify/functions/**"]
+
+# Environment variables (set in Netlify dashboard)
+# OPENAI_API_KEY
+# OPENAI_MODEL
+# SUPABASE_URL
+# SUPABASE_SERVICE_ROLE_KEY
+# SUPABASE_JWT_SECRET
+# APPLE_KEY_ID
+# APPLE_ISSUER_ID
+# APPLE_PRIVATE_KEY (base64)
+# APPLE_BUNDLE_ID
+# APPLE_ENVIRONMENT
+# GOOGLE_SERVICE_ACCOUNT_JSON (base64)
+# GOOGLE_PACKAGE_NAME
+# CRON_SECRET
+
+# CORS headers for all functions
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+
+# Redirect API calls
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Weekly summary scheduled function (runs every Sunday at 9 AM UTC)
+# Note: Requires Netlify Pro plan for scheduled functions
+# [functions."weekly-summary-cron"]
+#   schedule = "0 9 * * 0"

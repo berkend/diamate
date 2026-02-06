@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.org.diamate.app",
+        "paths": ["/app/*", "/oauth/*", "/callback/*"]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["TEAM_ID.org.diamate.app"]
+  }
+}

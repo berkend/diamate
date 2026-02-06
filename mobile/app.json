@@ -1,0 +1,89 @@
+{
+  "expo": {
+    "name": "DiaMate",
+    "slug": "diamate",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#667eea"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.diamate.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "DiaMate, diyabet yönetiminizi kişiselleştirmek için sağlık verilerinizi okur.",
+        "NSHealthUpdateUsageDescription": "DiaMate, öğün ve insülin kayıtlarınızı Apple Health'e yazabilir.",
+        "NSCameraUsageDescription": "DiaMate, yemek fotoğraflarını analiz etmek için kameranızı kullanır.",
+        "NSPhotoLibraryUsageDescription": "DiaMate, yemek fotoğraflarını analiz etmek için fotoğraflarınıza erişir."
+      },
+      "entitlements": {
+        "com.apple.developer.healthkit": true,
+        "com.apple.developer.healthkit.background-delivery": true
+      },
+      "associatedDomains": [
+        "applinks:diamate.org",
+        "webcredentials:diamate.org"
+      ]
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#667eea"
+      },
+      "package": "org.diamate.app",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.health.READ_BLOOD_GLUCOSE",
+        "android.permission.health.READ_NUTRITION",
+        "android.permission.health.READ_SLEEP",
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.WRITE_BLOOD_GLUCOSE",
+        "android.permission.health.WRITE_NUTRITION"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "diamate.org",
+              "pathPrefix": "/app"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "DiaMate yemek fotoğraflarını analiz etmek için kameranızı kullanır."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "DiaMate yemek fotoğraflarını analiz etmek için fotoğraflarınıza erişir."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      },
+      "apiUrl": "https://diamate.org/.netlify/functions"
+    },
+    "scheme": "diamate"
+  }
+}
