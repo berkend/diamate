@@ -2,96 +2,85 @@
  * DiaMate Type Definitions
  */
 
-// ==========================================
-// USER & PROFILE
-// ==========================================
+export type GlucoseTrend = 'rising_fast' | 'rising' | 'stable' | 'falling' | 'falling_fast';
+
+export type HealthProvider = 'apple_health' | 'health_connect' | 'dexcom' | 'libre' | 'manual';
+
+export interface GlucoseReading {
+  id?: string;
+  mgdl: number;
+  timestamp: string;
+  source?: HealthProvider;
+  trend?: GlucoseTrend;
+}
+
+export interface HealthConnection {
+  provider: HealthProvider;
+  connected: boolean;
+  lastSync?: string;
+  permissions: string[];
+}
 
 export interface UserProfile {
   id?: string;
-  name: string;
-  age: number;
-  gender: 'male' | 'female' | 'other';
-  height: number; // cm
-  weight: number; // kg
-  diabetesType: 'T1' | 'T2' | 'GDM' | 'Other';
-  diagnosisYear?: number;
-  
-  // Targets
-  targetLow: number;  // mg/dL
-  targetHigh: number; // mg/dL
-  
-  // Insulin Settings
+  email?: string;
+  name?: string;
+  age?: number;
+  gender?: 'male' | 'female' | 'other';
+  height?: number;
+  weight?: number;
+  diabetesType?: 'T1' | 'T2' | 'GDM' | 'Other' | 'type1' | 'type2' | 'gestational' | 'prediabetes';
+  targetLow?: number;
+  targetHigh?: number;
   insulinType?: string;
-  icr: number;              // Insulin-to-Carb Ratio: 1 unit per X grams
-  isf: number;              // Insulin Sensitivity Factor: 1 unit drops BG by X mg/dL
-  activeInsulinHours: number; // Duration of insulin action (typically 3-5 hours)
-  maxBolus: number;         // Safety limit for single bolus
-  
-  // Preferences
-  language: 'tr' | 'en';
-  activityLevel: 'sedentary' | 'light' | 'moderate' | 'active';
-}
-
-// ==========================================
-// HEALTH DATA
-// ==========================================
-
-export type GlucoseSource = 
-  | 'healthkit' 
-  | 'healthconnect' 
-  | 'dexcom' 
-  | 'libre' 
-  | 'manual';
-
-export type GlucoseTrend = 
-  | 'rising_fast' 
-  | 'rising' 
-  | 'stable' 
-  | 'falling' 
-  | 'falling_fast';
-
-export interface GlucoseReading {
-  id: string;
-  source: GlucoseSource;
-  timestamp: string; // ISO
-  mgdl: number;
-  trend?: GlucoseTrend;
-  device?: string;
-  tags?: string[];
-}
-
-export interface MealItem {
-  name: string;
-  portion?: string;
-  carbs_g: number;
-  confidence?: 'high' | 'medium' | 'low';
+  carbRatio?: number;
+  correctionFactor?: number;
+  icr?: number; // Insulin to Carb Ratio
+  isf?: number; // Insulin Sensitivity Factor
+  activeInsulinHours?: number;
+  language?: 'tr' | 'en';
+  activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
+  createdAt?: string;
 }
 
 export interface MealLog {
   id: string;
-  timestamp: string; // ISO
-  items: MealItem[];
-  totalCarbs: number;
-  photoUsed: boolean;
-  notes?: string;
+  timestamp: string;
+  description?: string;
+  carbs?: number;
+  protein?: number;
+  fat?: number;
+  calories?: number;
+  imageUrl?: string;
   glucoseBefore?: number;
   glucoseAfter?: number;
+  items?: MealItem[];
+  totalCarbs?: number;
+  photoUsed?: boolean;
+  notes?: string;
 }
 
-// ==========================================
-// SUBSCRIPTION & ENTITLEMENT
-// ==========================================
+export interface InsulinDose {
+  id: string;
+  timestamp: string;
+  units: number;
+  type: 'rapid' | 'long' | 'mixed';
+  notes?: string;
+}
 
-export type PlanType = 'FREE' | 'PRO_MONTHLY' | 'PRO_YEARLY';
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
 
 export interface Entitlement {
   isPro: boolean;
-  plan: PlanType;
-  expiresAt?: string;
+  plan: 'FREE' | 'PREMIUM' | 'PRO';
   quotas: {
     chatPerDay: number;
     visionPerDay: number;
-    insightsPerWeek?: number;
   };
   usage: {
     dailyChatCount: number;
@@ -100,36 +89,30 @@ export interface Entitlement {
   };
 }
 
-// ==========================================
-// AI
-// ==========================================
-
-export interface AIMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp?: string;
-}
-
 export interface AIMemory {
   profileFacts: Record<string, any>;
   memorySummary: string;
-  conversationHistory: Array<{
-    user: string;
-    assistant: string;
-    timestamp: string;
-  }>;
+  conversationHistory: ChatMessage[];
 }
 
+export interface Subscription {
+  tier: 'free' | 'premium' | 'pro';
+  expiresAt?: string;
+  isActive: boolean;
+}
+
+// API Request/Response Types
 export interface AIChatRequest {
   messages: AIMessage[];
+  context?: object;
   lang: 'tr' | 'en';
   recentContext?: object;
 }
 
 export interface AIChatResponse {
   text: string;
-  showCalculatorButton?: boolean;
   error?: string;
+  showCalculatorButton?: boolean;
 }
 
 export interface AIVisionRequest {
@@ -138,47 +121,26 @@ export interface AIVisionRequest {
 }
 
 export interface AIVisionResponse {
-  items: MealItem[];
+  items: Array<{
+    name: string;
+    carbs_g: number;
+    portion?: string;
+  }>;
   total_carbs_g: number;
-  notes: string;
+  notes?: string;
   confidence: 'high' | 'medium' | 'low';
   error?: string;
 }
 
-// ==========================================
-// HEALTH CONNECTIONS
-// ==========================================
-
-export type HealthProvider = 
-  | 'apple_health' 
-  | 'health_connect' 
-  | 'samsung_health' 
-  | 'dexcom' 
-  | 'libre';
-
-export interface HealthConnection {
-  provider: HealthProvider;
-  connected: boolean;
-  lastSync?: string;
-  permissions: string[];
-  error?: string;
+// Additional types for screens
+export interface AIMessage {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
-// ==========================================
-// NAVIGATION
-// ==========================================
-
-export type RootStackParamList = {
-  Onboarding: undefined;
-  Main: undefined;
-  Paywall: { source?: string };
-  HealthConnections: undefined;
-};
-
-export type MainTabParamList = {
-  Home: undefined;
-  Meal: undefined;
-  Chat: undefined;
-  Insights: undefined;
-  Settings: undefined;
-};
+export interface MealItem {
+  name: string;
+  carbs_g: number;
+  portion?: string;
+  confidence?: 'high' | 'medium' | 'low';
+}

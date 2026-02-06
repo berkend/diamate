@@ -14,17 +14,27 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { PurchasesPackage } from 'react-native-purchases';
 import { getPackages, purchasePackage, restorePurchases } from '../services/purchases';
 import { useAppStore } from '../store/appStore';
+
+interface Package {
+  identifier: string;
+  product: {
+    identifier: string;
+    title: string;
+    description: string;
+    priceString: string;
+    price?: number;
+  };
+}
 
 export function PaywallScreen() {
   const navigation = useNavigation();
   const route = useRoute<any>();
   const { entitlement } = useAppStore();
   
-  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
-  const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
 

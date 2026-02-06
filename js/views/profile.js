@@ -4,6 +4,7 @@
 import { getProfile, setProfile, resetDB, isSetupComplete } from '../store.js';
 import { createToast, showConfirm, t } from '../utils.js';
 import { navigateTo } from '../router.js';
+import { signOut, getCurrentUser, saveProfileToCloud } from '../supabase.js';
 
 /**
  * Initialize profile view
@@ -15,11 +16,12 @@ export function initProfile() {
 /**
  * Render profile view
  */
-export function renderProfileView() {
+export async function renderProfileView() {
     const container = document.getElementById('profileScreen');
     if (!container) return;
     
     const profile = getProfile();
+    const user = await getCurrentUser();
     
     const diabetesLabels = {
         'T1': t('Tip 1 Diyabet', 'Type 1 Diabetes'),
@@ -41,7 +43,31 @@ export function renderProfileView() {
             <div style="width: 90px; height: 90px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 44px; margin: 0 auto 16px; border: 3px solid rgba(255,255,255,0.3);">${genderIcon}</div>
             <div style="font-size: 24px; font-weight: 800;">${profile.name || t('Kullanıcı', 'User')}</div>
             <div style="font-size: 14px; opacity: 0.9; margin-top: 6px;">${diabetesLabels[profile.diabetesType] || t('Diyabet', 'Diabetes')}</div>
+            ${user ? `<div style="font-size: 12px; opacity: 0.7; margin-top: 8px;">📧 ${user.email}</div>` : ''}
         </div>
+        
+        <!-- Account Status Card -->
+        ${user ? `
+        <div style="background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); padding: 16px; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(76,175,80,0.3);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 24px;">☁️</span>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; color: #2E7D32; margin-bottom: 4px;">${t('Bulut Senkronizasyonu Aktif', 'Cloud Sync Active')}</div>
+                    <div style="font-size: 13px; color: #388E3C; line-height: 1.4;">${t('Verileriniz güvenle yedekleniyor', 'Your data is being backed up securely')}</div>
+                </div>
+            </div>
+        </div>
+        ` : `
+        <div style="background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%); padding: 16px; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(255,152,0,0.3);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 24px;">⚠️</span>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; color: #E65100; margin-bottom: 4px;">${t('Giriş Yapılmadı', 'Not Signed In')}</div>
+                    <div style="font-size: 13px; color: #F57C00; line-height: 1.4;">${t('Verilerinizi yedeklemek için giriş yapın', 'Sign in to backup your data')}</div>
+                </div>
+            </div>
+        </div>
+        `}
         
         <!-- Personal Info Card -->
         <div style="background: white; padding: 24px; border-radius: 24px; margin-bottom: 16px; box-shadow: var(--shadow);">
@@ -95,22 +121,18 @@ export function renderProfileView() {
             </div>
         </div>
         
-        <!-- Data Storage Info -->
-        <div style="background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); padding: 16px; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(33,150,243,0.3);">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 24px;">🔒</span>
-                <div>
-                    <div style="font-weight: 700; color: #1565C0; margin-bottom: 4px;">${t('Veri Depolama: Sadece Yerel', 'Data Storage: Local Only')}</div>
-                    <div style="font-size: 13px; color: #1976D2; line-height: 1.4;">${t('Tüm verileriniz bu cihazda güvenle saklanır. Sunucuya veri gönderilmez.', 'All your data is stored securely on this device. No data is sent to servers.')}</div>
-                </div>
-            </div>
-        </div>
-        
         <!-- Edit Profile Button -->
         <button id="btnEditProfile" style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px;">
             <span style="font-size: 18px;">✏️</span>
             <span>${t('Profili Düzenle', 'Edit Profile')}</span>
         </button>
+        
+        ${user ? `
+        <!-- Sign Out Button -->
+        <button id="btnSignOut" style="width: 100%; padding: 16px; background: rgba(255,152,0,0.1); color: #E65100; border: 2px solid rgba(255,152,0,0.3); border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 12px;">
+            ${t('Çıkış Yap', 'Sign Out')}
+        </button>
+        ` : ''}
         
         <!-- Reset Button -->
         <button id="btnReset" style="width: 100%; padding: 16px; background: rgba(244,67,54,0.1); color: var(--error); border: 2px solid rgba(244,67,54,0.3); border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;">
@@ -118,18 +140,40 @@ export function renderProfileView() {
         </button>
     `;
     
-    wireProfileEvents();
+    wireProfileEvents(user);
 }
 
-function wireProfileEvents() {
+function wireProfileEvents(user) {
     document.getElementById('btnEditProfile')?.addEventListener('click', showEditProfileModal);
+    
+    document.getElementById('btnSignOut')?.addEventListener('click', async () => {
+        showConfirm(
+            t('Çıkış Yap', 'Sign Out'),
+            t('Hesabınızdan çıkış yapmak istediğinizden emin misiniz?', 'Are you sure you want to sign out?'),
+            async () => {
+                try {
+                    await signOut();
+                    createToast('success', t('Çıkış yapıldı', 'Signed out'));
+                    navigateTo('login');
+                } catch (e) {
+                    console.error('Sign out error:', e);
+                    createToast('error', t('Çıkış yapılamadı', 'Sign out failed'));
+                }
+            }
+        );
+    });
     
     document.getElementById('btnReset')?.addEventListener('click', () => {
         showConfirm(
             t('Tüm Verileri Sil', 'Delete All Data'),
             t('Bu işlem tüm glukoz, öğün ve insülin kayıtlarınızı kalıcı olarak silecektir. Bu işlem geri alınamaz!', 'This will permanently delete all your glucose, meal and insulin records. This action cannot be undone!'),
-            () => {
+            async () => {
                 resetDB();
+                if (user) {
+                    try {
+                        await signOut();
+                    } catch (e) {}
+                }
                 createToast('success', t('Tüm veriler silindi', 'All data deleted'));
                 navigateTo('login');
             }
@@ -236,7 +280,7 @@ function showEditProfileModal() {
     document.getElementById('closeEditModal').onclick = () => overlay.remove();
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
     
-    document.getElementById('saveProfileBtn').onclick = () => {
+    document.getElementById('saveProfileBtn').onclick = async () => {
         const updates = {
             name: document.getElementById('editName').value.trim(),
             age: parseInt(document.getElementById('editAge').value) || null,
@@ -251,6 +295,17 @@ function showEditProfileModal() {
         };
         
         setProfile(updates);
+        
+        // Save to cloud if logged in
+        const user = await getCurrentUser();
+        if (user) {
+            try {
+                await saveProfileToCloud(getProfile());
+            } catch (e) {
+                console.error('Error saving to cloud:', e);
+            }
+        }
+        
         overlay.remove();
         createToast('success', t('Profil güncellendi', 'Profile updated'));
         renderProfileView();

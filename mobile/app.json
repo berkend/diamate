@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#667eea"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "org.diamate.app",
@@ -39,31 +41,10 @@
       "package": "org.diamate.app",
       "versionCode": 1,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.health.READ_BLOOD_GLUCOSE",
-        "android.permission.health.READ_NUTRITION",
-        "android.permission.health.READ_SLEEP",
-        "android.permission.health.READ_STEPS",
-        "android.permission.health.WRITE_BLOOD_GLUCOSE",
-        "android.permission.health.WRITE_NUTRITION"
-      ],
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "https",
-              "host": "diamate.org",
-              "pathPrefix": "/app"
-            }
-          ],
-          "category": ["BROWSABLE", "DEFAULT"]
-        }
+        "android.permission.CAMERA"
       ]
     },
     "plugins": [
-      "expo-router",
       "expo-secure-store",
       [
         "expo-camera",
@@ -79,11 +60,12 @@
       ]
     ],
     "extra": {
+      "apiUrl": "https://diamate.org/.netlify/functions",
       "eas": {
-        "projectId": "your-eas-project-id"
-      },
-      "apiUrl": "https://diamate.org/.netlify/functions"
+        "projectId": "42a5b3b7-6185-4cec-a94b-44b7f30d1368"
+      }
     },
-    "scheme": "diamate"
+    "scheme": "diamate",
+    "owner": "berken1dogan"
   }
 }
