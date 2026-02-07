@@ -16,6 +16,7 @@ const AI_MEMORY_KEY = 'diamate_ai_memory';
 const API_KEY_STORAGE = 'diamate_ai_api_key';
 
 // Check if we're in local dev mode (no Netlify Functions)
+// Reset on each page load - don't persist this flag
 let useClientSide = false;
 
 // ==========================================
