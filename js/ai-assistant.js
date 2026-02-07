@@ -86,58 +86,43 @@ export async function generateChatResponse(userMessage) {
     // Build recent context for personalization
     const recentContext = buildRecentContext();
     
-    // Try server-side first
-    if (!useClientSide) {
+    // Always try server-side first
+    try {
+        const response = await fetch(`${API_BASE}/ai-chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages, lang, recentContext })
+        });
+        
+        // Try to parse JSON
+        let data;
         try {
-            const response = await fetch(`${API_BASE}/ai-chat`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages, lang, recentContext })
-            });
-            
-            // If 404, switch to demo mode (no Netlify Functions)
-            if (response.status === 404) {
-                console.log('Netlify Functions not available, switching to demo mode');
-                useClientSide = true;
-                return generateClientSideResponse(userMessage, messages, lang);
-            }
-            
-            // Try to parse JSON
-            let data;
-            try {
-                data = await response.json();
-            } catch {
-                // Non-JSON response (likely HTML error page)
-                console.log('Non-JSON response, switching to demo mode');
-                useClientSide = true;
-                return generateClientSideResponse(userMessage, messages, lang);
-            }
-            
-            if (!response.ok) {
-                // Server returned an error - show it
-                return handleAPIError(response.status, data, lang);
-            }
-            
-            // Handle safety response
-            let responseText = data.text;
-            if (data.showCalculatorButton) {
-                responseText += lang === 'en' 
-                    ? '\n\n📱 [Open Dose Calculator](#dose)' 
-                    : '\n\n📱 [Doz Hesaplayıcıyı Aç](#dose)';
-            }
-            
-            return responseText;
-            
-        } catch (error) {
-            // Network error or fetch failed - switch to demo mode
-            console.warn('Server request failed:', error.message);
-            useClientSide = true;
+            data = await response.json();
+        } catch {
+            // Non-JSON response (likely HTML error page)
+            console.log('Non-JSON response, using client-side');
             return generateClientSideResponse(userMessage, messages, lang);
         }
+        
+        if (!response.ok) {
+            return handleAPIError(response.status, data, lang);
+        }
+        
+        // Handle safety response
+        let responseText = data.text;
+        if (data.showCalculatorButton) {
+            responseText += lang === 'en' 
+                ? '\n\n📱 [Open Dose Calculator](#dose)' 
+                : '\n\n📱 [Doz Hesaplayıcıyı Aç](#dose)';
+        }
+        
+        return responseText;
+        
+    } catch (error) {
+        // Network error - use client-side
+        console.warn('Server request failed:', error.message);
+        return generateClientSideResponse(userMessage, messages, lang);
     }
-    
-    // Client-side fallback
-    return generateClientSideResponse(userMessage, messages, lang);
 }
 
 /**
@@ -259,54 +244,42 @@ ${context}`;
 export async function analyzePhoto(imageDataUrl) {
     const lang = getLang();
     
-    // Try server-side first
-    if (!useClientSide) {
+    // Always try server-side first
+    try {
+        const response = await fetch(`${API_BASE}/ai-vision`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageDataUrl, lang })
+        });
+        
+        // Try to parse JSON
+        let data;
         try {
-            const response = await fetch(`${API_BASE}/ai-vision`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageDataUrl, lang })
-            });
-            
-            // If 404, switch to demo mode
-            if (response.status === 404) {
-                useClientSide = true;
-                return analyzePhotoClientSide(imageDataUrl, lang);
-            }
-            
-            // Try to parse JSON
-            let data;
-            try {
-                data = await response.json();
-            } catch {
-                // Non-JSON response
-                useClientSide = true;
-                return analyzePhotoClientSide(imageDataUrl, lang);
-            }
-            
-            if (!response.ok) {
-                return {
-                    error: true,
-                    message: handleAPIError(response.status, data, lang)
-                };
-            }
-            
-            return {
-                success: true,
-                items: data.items || [],
-                totalCarbs: data.total_carbs_g || 0,
-                notes: data.notes || '',
-                confidence: data.confidence || 'medium'
-            };
-            
-        } catch (error) {
-            console.warn('Server request failed:', error.message);
-            useClientSide = true;
+            data = await response.json();
+        } catch {
+            // Non-JSON response - server not available
             return analyzePhotoClientSide(imageDataUrl, lang);
         }
+        
+        if (!response.ok) {
+            return {
+                error: true,
+                message: handleAPIError(response.status, data, lang)
+            };
+        }
+        
+        return {
+            success: true,
+            items: data.items || [],
+            totalCarbs: data.total_carbs_g || 0,
+            notes: data.notes || '',
+            confidence: data.confidence || 'medium'
+        };
+        
+    } catch (error) {
+        console.warn('Server request failed:', error.message);
+        return analyzePhotoClientSide(imageDataUrl, lang);
     }
-    
-    return analyzePhotoClientSide(imageDataUrl, lang);
 }
 
 /**

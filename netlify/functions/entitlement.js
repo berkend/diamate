@@ -24,12 +24,12 @@ exports.handler = async (event) => {
   const today = new Date().toISOString().split('T')[0];
   
   const entitlement = {
-    isPro: false,
-    plan: 'FREE',
+    isPro: true,
+    plan: 'PRO',
     quotas: {
-      chatPerDay: 5,
-      visionPerDay: 0,
-      insightsPerWeek: 3
+      chatPerDay: 50,
+      visionPerDay: 20,
+      insightsPerWeek: 10
     },
     usage: {
       dailyChatCount: 0,
