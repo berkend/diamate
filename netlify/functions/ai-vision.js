@@ -14,6 +14,17 @@ const API_KEY = OPENAI_API_KEY || GROQ_API_KEY;
 const API_URL = 'https://api.openai.com/v1/chat/completions';
 const MODEL = 'gpt-4o';
 
+// Rate limits
+const IP_DAILY_LIMIT = 15; // Max vision requests per IP per day
+const FREE_VISION_LIMIT = 2;
+
+function getClientIP(event) {
+  return event.headers['x-forwarded-for']?.split(',')[0]?.trim()
+    || event.headers['x-real-ip']
+    || event.headers['client-ip']
+    || 'unknown';
+}
+
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -36,6 +47,13 @@ exports.handler = async (event) => {
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'config_error', message: 'Vision service not configured' }) };
   }
 
+  // === AUTH REQUIRED ===
+  const authHeader = event.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (!token) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'auth_required', message: 'Giriş yapmanız gerekiyor' }) };
+  }
+
   let body;
   try {
     body = JSON.parse(event.body);
@@ -55,49 +73,72 @@ exports.handler = async (event) => {
   }
 
   try {
-    // === QUOTA CHECK ===
+    // === QUOTA & IP CHECK ===
     let isPro = false;
-    const authHeader = event.headers.authorization || '';
-    const token = authHeader.replace('Bearer ', '');
     let userId = null;
+    const clientIP = getClientIP(event);
+    const today = new Date().toISOString().split('T')[0];
+    const todayStart = today + 'T00:00:00Z';
 
-    if (token && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+    if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-      const { data: { user } } = await supabase.auth.getUser(token);
-      if (user) {
-        userId = user.id;
 
-        // Check subscription
-        const { data: sub } = await supabase
-          .from('subscriptions')
-          .select('plan, status, current_period_end')
+      // Verify user
+      const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+      if (!user || authErr) {
+        return { statusCode: 401, headers, body: JSON.stringify({ error: 'invalid_token', message: 'Geçersiz oturum, tekrar giriş yapın' }) };
+      }
+      userId = user.id;
+
+      // Check subscription
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('plan, status, current_period_end')
+        .eq('user_id', userId)
+        .single();
+
+      if (sub && sub.status === 'active' && (!sub.current_period_end || new Date(sub.current_period_end) > new Date())) {
+        isPro = sub.plan === 'pro';
+      }
+
+      if (!isPro) {
+        // 1) Per-user daily limit
+        const { count: userCount } = await supabase
+          .from('usage_tracking')
+          .select('*', { count: 'exact', head: true })
           .eq('user_id', userId)
-          .single();
+          .eq('feature', 'vision')
+          .gte('used_at', todayStart);
 
-        if (sub && sub.status === 'active' && (!sub.current_period_end || new Date(sub.current_period_end) > new Date())) {
-          isPro = sub.plan === 'pro';
+        if ((userCount || 0) >= FREE_VISION_LIMIT) {
+          return {
+            statusCode: 429, headers,
+            body: JSON.stringify({
+              error: 'quota_exceeded', code: 'quota_exceeded',
+              message: lang === 'en'
+                ? `Daily photo analysis limit reached (${FREE_VISION_LIMIT}/day). Upgrade to PRO for unlimited!`
+                : `Günlük fotoğraf analizi limitine ulaştınız (${FREE_VISION_LIMIT}/gün). Sınırsız erişim için PRO'ya yükseltin!`
+            })
+          };
         }
 
-        if (!isPro) {
-          // Count today's vision usage
-          const today = new Date().toISOString().split('T')[0];
-          const { count } = await supabase
+        // 2) Per-IP daily limit (prevents multi-account abuse)
+        if (clientIP !== 'unknown') {
+          const { count: ipCount } = await supabase
             .from('usage_tracking')
             .select('*', { count: 'exact', head: true })
-            .eq('user_id', userId)
             .eq('feature', 'vision')
-            .gte('used_at', today + 'T00:00:00Z');
+            .eq('ip_address', clientIP)
+            .gte('used_at', todayStart);
 
-          if ((count || 0) >= 2) {
+          if ((ipCount || 0) >= IP_DAILY_LIMIT) {
             return {
-              statusCode: 429,
-              headers,
+              statusCode: 429, headers,
               body: JSON.stringify({
-                error: 'quota_exceeded',
-                code: 'quota_exceeded',
+                error: 'ip_rate_limit', code: 'ip_rate_limit',
                 message: lang === 'en'
-                  ? 'Daily photo analysis limit reached (2/day). Upgrade to PRO for unlimited!'
-                  : 'Günlük fotoğraf analizi limitine ulaştınız (2/gün). Sınırsız erişim için PRO\'ya yükseltin!'
+                  ? 'Too many requests from this network today. Try again tomorrow or upgrade to PRO.'
+                  : 'Bu ağdan bugün çok fazla istek geldi. Yarın tekrar deneyin veya PRO\'ya yükseltin.'
               })
             };
           }
@@ -144,6 +185,7 @@ exports.handler = async (event) => {
         await supabase.from('usage_tracking').insert({
           user_id: userId,
           feature: 'vision',
+          ip_address: getClientIP(event),
           used_at: new Date().toISOString()
         });
       } catch (e) {

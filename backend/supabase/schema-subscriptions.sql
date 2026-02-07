@@ -23,12 +23,14 @@ CREATE TABLE IF NOT EXISTS usage_tracking (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     feature TEXT NOT NULL CHECK (feature IN ('chat', 'vision', 'insight')),
+    ip_address TEXT,
     used_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_usage_user_feature ON usage_tracking(user_id, feature, used_at);
+CREATE INDEX IF NOT EXISTS idx_usage_ip_feature ON usage_tracking(ip_address, feature, used_at);
 
 -- RLS Policies
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
