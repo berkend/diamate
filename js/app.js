@@ -20,6 +20,7 @@ import {
     loadProfileFromCloud,
     syncToCloud
 } from './supabase.js';
+import { clearEntitlementCache } from './ai-assistant.js';
 
 // View modules
 import { initDashboard, renderDashboard } from './views/dashboard.js';
@@ -121,6 +122,18 @@ async function initApp() {
     });
     
     console.log('DiaMate Pro ready!');
+    
+    // Check for Stripe checkout success
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+        clearEntitlementCache();
+        createToast('success', '🎉 ' + t('PRO aboneliğiniz aktif! Tüm özellikler açıldı.', 'Your PRO subscription is active! All features unlocked.'));
+        // Clean URL
+        window.history.replaceState({}, '', window.location.pathname);
+    } else if (urlParams.get('canceled') === 'true') {
+        createToast('info', t('Ödeme iptal edildi', 'Payment canceled'));
+        window.history.replaceState({}, '', window.location.pathname);
+    }
 }
 
 /**

@@ -4,7 +4,8 @@
 import { getProfile, setProfile, resetDB, isSetupComplete, getReminders, addReminder, toggleReminder, deleteReminder, getFavoriteMeals, deleteFavoriteMeal } from '../store.js';
 import { createToast, showConfirm, t } from '../utils.js';
 import { navigateTo } from '../router.js';
-import { signOut, getCurrentUser, saveProfileToCloud } from '../supabase.js';
+import { signOut, getCurrentUser, saveProfileToCloud, getSession } from '../supabase.js';
+import { getEntitlement, clearEntitlementCache } from '../ai-assistant.js';
 
 /**
  * Initialize profile view
@@ -22,6 +23,8 @@ export async function renderProfileView() {
     
     const profile = getProfile();
     const user = await getCurrentUser();
+    const entitlement = await getEntitlement(true);
+    const isPro = entitlement?.isPro || false;
     
     const diabetesLabels = {
         'T1': t('Tip 1 Diyabet', 'Type 1 Diabetes'),
@@ -66,6 +69,39 @@ export async function renderProfileView() {
                     <div style="font-size: 13px; color: #F57C00; line-height: 1.4;">${t('Verilerinizi yedeklemek için giriş yapın', 'Sign in to backup your data')}</div>
                 </div>
             </div>
+        </div>
+        `}
+        
+        <!-- Subscription Card -->
+        ${isPro ? `
+        <div style="background: linear-gradient(135deg, #FFD700 0%, #FFA000 100%); padding: 16px; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(255,215,0,0.3);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 24px;">👑</span>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; color: #3E2723; margin-bottom: 4px;">DiaMate PRO</div>
+                    <div style="font-size: 13px; color: #4E342E; line-height: 1.4;">${t('Tüm özellikler aktif', 'All features active')}</div>
+                </div>
+            </div>
+        </div>
+        ` : `
+        <div style="background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%); padding: 20px; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(156,39,176,0.2);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <span style="font-size: 24px;">🚀</span>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; color: #4A148C; margin-bottom: 4px;">DiaMate PRO${t('\'ya Yükselt', ' Upgrade')}</div>
+                    <div style="font-size: 12px; color: #6A1B9A; line-height: 1.4;">${t('Sınırsız AI sohbet ve fotoğraf analizi', 'Unlimited AI chat and photo analysis')}</div>
+                </div>
+            </div>
+            <div style="font-size: 12px; color: #7B1FA2; margin-bottom: 12px; line-height: 1.6;">
+                ✅ ${t('Sınırsız AI sohbet', 'Unlimited AI chat')}<br>
+                ✅ ${t('Sınırsız fotoğraf analizi', 'Unlimited photo analysis')}<br>
+                ✅ ${t('PDF rapor indirme', 'PDF report download')}<br>
+                ✅ ${t('Doktor paylaşım linki', 'Doctor share link')}<br>
+                ✅ ${t('Bulut senkronizasyonu', 'Cloud sync')}
+            </div>
+            <button id="btnUpgradePro" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(156,39,176,0.3);">
+                👑 ${t('PRO\'ya Yükselt', 'Upgrade to PRO')}
+            </button>
         </div>
         `}
         
@@ -161,6 +197,50 @@ export async function renderProfileView() {
 function wireProfileEvents(user) {
     document.getElementById('btnEditProfile')?.addEventListener('click', showEditProfileModal);
     document.getElementById('btnAddReminder')?.addEventListener('click', showAddReminderModal);
+    
+    // PRO Upgrade button
+    document.getElementById('btnUpgradePro')?.addEventListener('click', async () => {
+        if (!user) {
+            createToast('warning', t('PRO abonelik için giriş yapmanız gerekiyor', 'Please sign in to subscribe to PRO'));
+            return;
+        }
+        
+        try {
+            const btn = document.getElementById('btnUpgradePro');
+            btn.disabled = true;
+            btn.textContent = '⏳ ' + t('Yönlendiriliyor...', 'Redirecting...');
+            
+            const session = await getSession();
+            const response = await fetch('/.netlify/functions/create-checkout', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session?.access_token || ''}`
+                },
+                body: JSON.stringify({
+                    userId: user.id,
+                    email: user.email,
+                    plan: 'pro_monthly'
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error(data.error || 'Checkout failed');
+            }
+        } catch (e) {
+            console.error('Checkout error:', e);
+            createToast('error', t('Ödeme sayfası açılamadı: ' + e.message, 'Could not open checkout: ' + e.message));
+            const btn = document.getElementById('btnUpgradePro');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '👑 ' + t('PRO\'ya Yükselt', 'Upgrade to PRO');
+            }
+        }
+    });
     
     // Reminder toggle/delete events
     document.querySelectorAll('.reminder-toggle').forEach(btn => {

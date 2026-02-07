@@ -5,6 +5,7 @@
 import { getProfile, listEntries, getTodayEntries, getLatestEntry } from './store.js';
 import { mean, stdDev, daysAgo, t, getLang } from './utils.js';
 import { getGlucoseStatus } from './safety.js';
+import { getSession } from './supabase.js';
 
 // API Base URL - uses relative path for Netlify Functions
 const API_BASE = '/.netlify/functions';
@@ -26,6 +27,28 @@ let useClientSide = false;
 let cachedEntitlement = null;
 
 /**
+ * Get auth token for API calls
+ */
+async function getAuthToken() {
+    try {
+        const session = await getSession();
+        return session?.access_token || null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Build auth headers
+ */
+async function getAuthHeaders() {
+    const token = await getAuthToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+}
+
+/**
  * Get user entitlement (PRO status, quotas)
  */
 export async function getEntitlement(forceRefresh = false) {
@@ -34,7 +57,8 @@ export async function getEntitlement(forceRefresh = false) {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/entitlement`);
+        const headers = await getAuthHeaders();
+        const response = await fetch(`${API_BASE}/entitlement`, { headers });
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
@@ -44,14 +68,20 @@ export async function getEntitlement(forceRefresh = false) {
         return cachedEntitlement;
     } catch (error) {
         console.warn('Entitlement check failed:', error);
-        // Return default FREE entitlement
         return {
             isPro: false,
             plan: 'FREE',
-            quotas: { chatPerDay: 5 },
-            usage: { dailyChatCount: 0 }
+            quotas: { chatPerDay: 5, visionPerDay: 2, pdfExport: false, doctorShare: false },
+            usage: { dailyChatCount: 0, dailyVisionCount: 0 }
         };
     }
+}
+
+/**
+ * Clear cached entitlement (call after subscription change)
+ */
+export function clearEntitlementCache() {
+    cachedEntitlement = null;
 }
 
 /**
@@ -70,6 +100,15 @@ export function hasApiKey() {
  */
 export async function generateChatResponse(userMessage) {
     const lang = getLang();
+    
+    // Check quota before making request
+    const entitlement = await getEntitlement();
+    if (!entitlement.isPro && entitlement.usage?.dailyChatCount >= entitlement.quotas?.chatPerDay) {
+        return lang === 'en'
+            ? '⚠️ You\'ve reached your daily chat limit (5/day). Upgrade to PRO for unlimited access! 🚀'
+            : '⚠️ Günlük sohbet limitinize ulaştınız (5/gün). Sınırsız erişim için PRO\'ya yükseltin! 🚀';
+    }
+    
     const memory = getAIMemory();
     
     // Build conversation history
@@ -88,9 +127,10 @@ export async function generateChatResponse(userMessage) {
     
     // Always try server-side first
     try {
+        const headers = await getAuthHeaders();
         const response = await fetch(`${API_BASE}/ai-chat`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ messages, lang, recentContext })
         });
         
@@ -244,11 +284,23 @@ ${context}`;
 export async function analyzePhoto(imageDataUrl) {
     const lang = getLang();
     
+    // Check quota before making request
+    const entitlement = await getEntitlement();
+    if (!entitlement.isPro && entitlement.usage?.dailyVisionCount >= entitlement.quotas?.visionPerDay) {
+        return {
+            error: true,
+            message: lang === 'en'
+                ? '⚠️ You\'ve reached your daily photo analysis limit (2/day). Upgrade to PRO for unlimited access! 🚀'
+                : '⚠️ Günlük fotoğraf analizi limitinize ulaştınız (2/gün). Sınırsız erişim için PRO\'ya yükseltin! 🚀'
+        };
+    }
+    
     // Always try server-side first
     try {
+        const headers = await getAuthHeaders();
         const response = await fetch(`${API_BASE}/ai-vision`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ imageDataUrl, lang })
         });
         

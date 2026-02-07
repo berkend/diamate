@@ -2,8 +2,12 @@
 // AI Chat endpoint - server-side Groq/OpenAI calls
 // User NEVER sees API key
 
+const { createClient } = require('@supabase/supabase-js');
+
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Use Groq if available, fallback to OpenAI
 const USE_GROQ = !!GROQ_API_KEY;
@@ -79,6 +83,25 @@ exports.handler = async (event) => {
     // Add safety disclaimer to dose-related responses
     if (containsDoseInfo(aiResponse)) {
       aiResponse = addDoseDisclaimer(aiResponse, lang);
+    }
+
+    // Track usage if user is authenticated
+    const authHeader = event.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '');
+    if (token && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+      try {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) {
+          await supabase.from('usage_tracking').insert({
+            user_id: user.id,
+            feature: 'chat',
+            used_at: new Date().toISOString()
+          });
+        }
+      } catch (e) {
+        console.warn('Usage tracking failed:', e.message);
+      }
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ text: aiResponse }) };

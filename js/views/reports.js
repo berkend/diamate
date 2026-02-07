@@ -4,6 +4,7 @@
 import { listEntries, downloadCSV } from '../store.js';
 import { SafetyPolicy } from '../safety.js';
 import { mean, stdDev, daysAgo, createToast, t } from '../utils.js';
+import { getEntitlement } from '../ai-assistant.js';
 
 let selectedDays = 7;
 
@@ -189,7 +190,12 @@ function wireReportsEvents() {
     // PDF Export
     const btnExportPDF = document.getElementById('btnExportPDF');
     if (btnExportPDF) {
-        btnExportPDF.addEventListener('click', () => {
+        btnExportPDF.addEventListener('click', async () => {
+            const entitlement = await getEntitlement();
+            if (!entitlement.isPro && !entitlement.quotas?.pdfExport) {
+                createToast('warning', t('PDF rapor PRO özelliğidir. Profil sayfasından yükseltin!', 'PDF report is a PRO feature. Upgrade from Profile page!'));
+                return;
+            }
             generatePDFReport();
         });
     }
@@ -197,7 +203,12 @@ function wireReportsEvents() {
     // Doctor Share
     const btnShareDoctor = document.getElementById('btnShareDoctor');
     if (btnShareDoctor) {
-        btnShareDoctor.addEventListener('click', () => {
+        btnShareDoctor.addEventListener('click', async () => {
+            const entitlement = await getEntitlement();
+            if (!entitlement.isPro && !entitlement.quotas?.doctorShare) {
+                createToast('warning', t('Doktor paylaşımı PRO özelliğidir. Profil sayfasından yükseltin!', 'Doctor sharing is a PRO feature. Upgrade from Profile page!'));
+                return;
+            }
             generateShareLink();
         });
     }

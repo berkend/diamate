@@ -2,8 +2,12 @@
 // AI Vision endpoint - food photo analysis
 // User NEVER sees API key
 
+const { createClient } = require('@supabase/supabase-js');
+
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Vision requires OpenAI (Groq doesn't support vision yet)
 const API_KEY = OPENAI_API_KEY || GROQ_API_KEY;
@@ -82,6 +86,26 @@ exports.handler = async (event) => {
     }
 
     const result = JSON.parse(jsonMatch[0]);
+
+    // Track usage if user is authenticated
+    const authHeader = event.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '');
+    if (token && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+      try {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) {
+          await supabase.from('usage_tracking').insert({
+            user_id: user.id,
+            feature: 'vision',
+            used_at: new Date().toISOString()
+          });
+        }
+      } catch (e) {
+        console.warn('Usage tracking failed:', e.message);
+      }
+    }
+
     return {
       statusCode: 200,
       headers,
