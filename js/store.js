@@ -34,7 +34,9 @@ function getDefaultDB() {
         },
         glucose: [],
         meals: [],
-        insulin: []
+        insulin: [],
+        favoriteMeals: [],
+        reminders: []
     };
 }
 
@@ -398,4 +400,132 @@ export function resetDB() {
 export function isSetupComplete() {
     const profile = getProfile();
     return profile && profile.setupComplete === true;
+}
+
+// ==========================================
+// FAVORITE MEALS
+// ==========================================
+
+/**
+ * Add favorite meal
+ */
+export function addFavoriteMeal(meal) {
+    const db = getDB();
+    if (!db.favoriteMeals) db.favoriteMeals = [];
+    
+    const newMeal = {
+        id: uuid(),
+        name: meal.name,
+        items: meal.items || [],
+        totalCarbs: meal.totalCarbs || 0,
+        createdAt: Date.now(),
+        usageCount: 0
+    };
+    
+    db.favoriteMeals.push(newMeal);
+    saveDB(db);
+    return newMeal;
+}
+
+/**
+ * Get favorite meals
+ */
+export function getFavoriteMeals() {
+    const db = getDB();
+    return db.favoriteMeals || [];
+}
+
+/**
+ * Update favorite meal usage count
+ */
+export function useFavoriteMeal(id) {
+    const db = getDB();
+    if (!db.favoriteMeals) return null;
+    
+    const meal = db.favoriteMeals.find(m => m.id === id);
+    if (meal) {
+        meal.usageCount = (meal.usageCount || 0) + 1;
+        meal.lastUsed = Date.now();
+        saveDB(db);
+    }
+    return meal;
+}
+
+/**
+ * Delete favorite meal
+ */
+export function deleteFavoriteMeal(id) {
+    const db = getDB();
+    if (!db.favoriteMeals) return false;
+    
+    const index = db.favoriteMeals.findIndex(m => m.id === id);
+    if (index === -1) return false;
+    
+    db.favoriteMeals.splice(index, 1);
+    saveDB(db);
+    return true;
+}
+
+// ==========================================
+// REMINDERS
+// ==========================================
+
+/**
+ * Add reminder
+ */
+export function addReminder(reminder) {
+    const db = getDB();
+    if (!db.reminders) db.reminders = [];
+    
+    const newReminder = {
+        id: uuid(),
+        type: reminder.type, // 'glucose', 'insulin', 'meal', 'custom'
+        title: reminder.title,
+        time: reminder.time, // HH:MM format
+        days: reminder.days || [0,1,2,3,4,5,6], // 0=Sunday
+        enabled: true,
+        createdAt: Date.now()
+    };
+    
+    db.reminders.push(newReminder);
+    saveDB(db);
+    return newReminder;
+}
+
+/**
+ * Get reminders
+ */
+export function getReminders() {
+    const db = getDB();
+    return db.reminders || [];
+}
+
+/**
+ * Toggle reminder
+ */
+export function toggleReminder(id) {
+    const db = getDB();
+    if (!db.reminders) return null;
+    
+    const reminder = db.reminders.find(r => r.id === id);
+    if (reminder) {
+        reminder.enabled = !reminder.enabled;
+        saveDB(db);
+    }
+    return reminder;
+}
+
+/**
+ * Delete reminder
+ */
+export function deleteReminder(id) {
+    const db = getDB();
+    if (!db.reminders) return false;
+    
+    const index = db.reminders.findIndex(r => r.id === id);
+    if (index === -1) return false;
+    
+    db.reminders.splice(index, 1);
+    saveDB(db);
+    return true;
 }

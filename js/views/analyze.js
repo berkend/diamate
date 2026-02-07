@@ -2,7 +2,7 @@
  * DiaMate Photo Analysis View - Production Server-Side AI
  * Real AI photo analysis via Netlify Functions
  */
-import { addEntry } from '../store.js';
+import { addEntry, addFavoriteMeal } from '../store.js';
 import { createToast, t, getLang } from '../utils.js';
 import { navigateTo } from '../router.js';
 import { renderDashboard } from './dashboard.js';
@@ -329,6 +329,10 @@ function renderAnalysisResult() {
                 </button>
             </div>
             
+            <button id="addFavoriteBtn" style="width: 100%; margin-top: 12px; padding: 14px; background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); color: white; border: none; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer;">
+                ⭐ ${t('Favorilere Ekle', 'Add to Favorites')}
+            </button>
+            
             <button id="retryAnalysisBtn" style="width: 100%; margin-top: 12px; padding: 12px; background: var(--background); border: 1px solid var(--border); border-radius: 14px; font-size: 14px; cursor: pointer; color: var(--text-secondary);">
                 🔄 ${t('Yeni Fotoğraf', 'New Photo')}
             </button>
@@ -348,6 +352,7 @@ function renderAnalysisResult() {
     
     document.getElementById('saveMealBtn')?.addEventListener('click', saveMealFromAnalysis);
     document.getElementById('calcDoseBtn')?.addEventListener('click', goToCalculator);
+    document.getElementById('addFavoriteBtn')?.addEventListener('click', addToFavorites);
     document.getElementById('retryAnalysisBtn')?.addEventListener('click', resetAnalysis);
 }
 
@@ -398,4 +403,23 @@ function goToCalculator() {
     setTimeout(() => {
         prefillCarbs(totalCarbs);
     }, 100);
+}
+
+
+function addToFavorites() {
+    if (!analysisResult || !analysisResult.items.length) {
+        createToast('warning', t('Önce yemek analizi yapın', 'Analyze food first'));
+        return;
+    }
+    
+    const totalCarbs = parseInt(document.getElementById('editTotalCarbs')?.value) || analysisResult.estimatedCarbs;
+    const mealName = analysisResult.items.map(i => i.name).join(', ');
+    
+    addFavoriteMeal({
+        name: mealName.length > 50 ? mealName.substring(0, 47) + '...' : mealName,
+        items: analysisResult.items.map(i => ({ name: i.name, carbs: i.carbs })),
+        totalCarbs: totalCarbs
+    });
+    
+    createToast('success', t('Favorilere eklendi', 'Added to favorites'));
 }

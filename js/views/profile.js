@@ -1,7 +1,7 @@
 /**
  * DiaMate Profile View
  */
-import { getProfile, setProfile, resetDB, isSetupComplete } from '../store.js';
+import { getProfile, setProfile, resetDB, isSetupComplete, getReminders, addReminder, toggleReminder, deleteReminder, getFavoriteMeals, deleteFavoriteMeal } from '../store.js';
 import { createToast, showConfirm, t } from '../utils.js';
 import { navigateTo } from '../router.js';
 import { signOut, getCurrentUser, saveProfileToCloud } from '../supabase.js';
@@ -127,6 +127,21 @@ export async function renderProfileView() {
             <span>${t('Profili Düzenle', 'Edit Profile')}</span>
         </button>
         
+        <!-- Reminders Card -->
+        <div style="background: white; padding: 24px; border-radius: 24px; margin-bottom: 16px; box-shadow: var(--shadow);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="font-size: 16px; font-weight: 700; color: var(--text-primary);">${t('Hatırlatıcılar', 'Reminders')}</div>
+                <button id="btnAddReminder" style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;">+ ${t('Ekle', 'Add')}</button>
+            </div>
+            ${renderReminders()}
+        </div>
+        
+        <!-- Favorite Meals Card -->
+        <div style="background: white; padding: 24px; border-radius: 24px; margin-bottom: 16px; box-shadow: var(--shadow);">
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">${t('Favori Yemekler', 'Favorite Meals')}</div>
+            ${renderFavoriteMeals()}
+        </div>
+        
         ${user ? `
         <!-- Sign Out Button -->
         <button id="btnSignOut" style="width: 100%; padding: 16px; background: rgba(255,152,0,0.1); color: #E65100; border: 2px solid rgba(255,152,0,0.3); border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 12px;">
@@ -145,6 +160,32 @@ export async function renderProfileView() {
 
 function wireProfileEvents(user) {
     document.getElementById('btnEditProfile')?.addEventListener('click', showEditProfileModal);
+    document.getElementById('btnAddReminder')?.addEventListener('click', showAddReminderModal);
+    
+    // Reminder toggle/delete events
+    document.querySelectorAll('.reminder-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+            toggleReminder(btn.dataset.id);
+            renderProfileView();
+        });
+    });
+    
+    document.querySelectorAll('.reminder-delete').forEach(btn => {
+        btn.addEventListener('click', () => {
+            deleteReminder(btn.dataset.id);
+            createToast('success', t('Hatırlatıcı silindi', 'Reminder deleted'));
+            renderProfileView();
+        });
+    });
+    
+    // Favorite meal delete events
+    document.querySelectorAll('.fav-meal-delete').forEach(btn => {
+        btn.addEventListener('click', () => {
+            deleteFavoriteMeal(btn.dataset.id);
+            createToast('success', t('Favori silindi', 'Favorite deleted'));
+            renderProfileView();
+        });
+    });
     
     document.getElementById('btnSignOut')?.addEventListener('click', async () => {
         showConfirm(
@@ -315,5 +356,160 @@ function showEditProfileModal() {
         if (headerName && updates.name) {
             headerName.textContent = updates.name.split(' ')[0];
         }
+    };
+}
+
+
+/**
+ * Render reminders list
+ */
+function renderReminders() {
+    const reminders = getReminders();
+    
+    if (reminders.length === 0) {
+        return `
+            <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                <div style="font-size: 32px; margin-bottom: 8px;">⏰</div>
+                <div>${t('Henüz hatırlatıcı yok', 'No reminders yet')}</div>
+            </div>
+        `;
+    }
+    
+    const typeIcons = {
+        'glucose': '🩸',
+        'insulin': '💉',
+        'meal': '🍽️',
+        'custom': '📝'
+    };
+    
+    return reminders.map(r => `
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--background); border-radius: 12px; margin-bottom: 8px;">
+            <span style="font-size: 24px;">${typeIcons[r.type] || '⏰'}</span>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: var(--text-primary);">${r.title}</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">${r.time}</div>
+            </div>
+            <button class="reminder-toggle" data-id="${r.id}" style="padding: 6px 12px; background: ${r.enabled ? 'var(--success)' : 'var(--border)'}; color: ${r.enabled ? 'white' : 'var(--text-secondary)'}; border: none; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer;">
+                ${r.enabled ? 'ON' : 'OFF'}
+            </button>
+            <button class="reminder-delete" data-id="${r.id}" style="padding: 6px 10px; background: rgba(244,67,54,0.1); color: var(--error); border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">🗑️</button>
+        </div>
+    `).join('');
+}
+
+/**
+ * Render favorite meals list
+ */
+function renderFavoriteMeals() {
+    const meals = getFavoriteMeals();
+    
+    if (meals.length === 0) {
+        return `
+            <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                <div style="font-size: 32px; margin-bottom: 8px;">⭐</div>
+                <div>${t('Henüz favori yemek yok', 'No favorite meals yet')}</div>
+                <div style="font-size: 12px; margin-top: 4px;">${t('Yemek analizi yaptığınızda favorilere ekleyebilirsiniz', 'You can add favorites when analyzing meals')}</div>
+            </div>
+        `;
+    }
+    
+    return meals.map(m => `
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--background); border-radius: 12px; margin-bottom: 8px;">
+            <span style="font-size: 24px;">🍽️</span>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: var(--text-primary);">${m.name}</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">${m.totalCarbs}g karb • ${m.usageCount || 0}x kullanıldı</div>
+            </div>
+            <button class="fav-meal-delete" data-id="${m.id}" style="padding: 6px 10px; background: rgba(244,67,54,0.1); color: var(--error); border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">🗑️</button>
+        </div>
+    `).join('');
+}
+
+/**
+ * Show add reminder modal
+ */
+function showAddReminderModal() {
+    const overlay = document.createElement('div');
+    overlay.id = 'addReminderOverlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 10001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    `;
+    
+    overlay.innerHTML = `
+        <div style="background: white; border-radius: 24px; padding: 24px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="font-size: 20px; font-weight: 700;">${t('Hatırlatıcı Ekle', 'Add Reminder')}</div>
+                <button id="closeReminderModal" style="width: 36px; height: 36px; border: none; background: var(--background); border-radius: 10px; font-size: 18px; cursor: pointer;">✕</button>
+            </div>
+            
+            <div class="input-group" style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('TİP', 'TYPE')}</label>
+                <select id="reminderType" class="input" style="padding: 14px;">
+                    <option value="glucose">🩸 ${t('Glukoz Ölçümü', 'Glucose Check')}</option>
+                    <option value="insulin">💉 ${t('İnsülin', 'Insulin')}</option>
+                    <option value="meal">🍽️ ${t('Öğün', 'Meal')}</option>
+                    <option value="custom">📝 ${t('Özel', 'Custom')}</option>
+                </select>
+            </div>
+            
+            <div class="input-group" style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('BAŞLIK', 'TITLE')}</label>
+                <input type="text" id="reminderTitle" class="input" placeholder="${t('Sabah ölçümü', 'Morning check')}" style="padding: 14px;">
+            </div>
+            
+            <div class="input-group" style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">${t('SAAT', 'TIME')}</label>
+                <input type="time" id="reminderTime" class="input" value="08:00" style="padding: 14px;">
+            </div>
+            
+            <button id="saveReminderBtn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;">
+                ${t('Kaydet', 'Save')}
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    document.getElementById('closeReminderModal').onclick = () => overlay.remove();
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    
+    // Auto-fill title based on type
+    document.getElementById('reminderType').onchange = (e) => {
+        const titles = {
+            'glucose': t('Glukoz ölçümü', 'Glucose check'),
+            'insulin': t('İnsülin zamanı', 'Insulin time'),
+            'meal': t('Öğün zamanı', 'Meal time'),
+            'custom': ''
+        };
+        document.getElementById('reminderTitle').value = titles[e.target.value] || '';
+    };
+    
+    document.getElementById('saveReminderBtn').onclick = () => {
+        const type = document.getElementById('reminderType').value;
+        const title = document.getElementById('reminderTitle').value.trim();
+        const time = document.getElementById('reminderTime').value;
+        
+        if (!title) {
+            createToast('warning', t('Başlık girin', 'Enter a title'));
+            return;
+        }
+        
+        addReminder({ type, title, time });
+        overlay.remove();
+        createToast('success', t('Hatırlatıcı eklendi', 'Reminder added'));
+        renderProfileView();
+        
+        // Note: Web notifications would need to be implemented with Service Worker
+        // For now, reminders are stored but notifications are not sent
     };
 }

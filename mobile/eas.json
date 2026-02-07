@@ -13,6 +13,9 @@
     },
     "preview": {
       "distribution": "internal",
+      "ios": {
+        "resourceClass": "m-medium"
+      },
       "android": {
         "buildType": "apk"
       }
@@ -24,7 +27,7 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "your-apple-id@email.com",
+        "appleId": "doganberken1905@gmail.com",
         "ascAppId": "your-app-store-connect-app-id"
       },
       "android": {

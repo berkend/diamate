@@ -95,6 +95,9 @@ async function initApp() {
     // Wire language switcher
     wireLanguageSwitcher();
     
+    // Wire theme switcher (Dark Mode)
+    wireThemeSwitcher();
+    
     // Listen for auth events
     window.addEventListener('auth:signin', async (e) => {
         currentUser = e.detail?.user;
@@ -509,6 +512,43 @@ function wireLanguageSwitcher() {
     
     if (btnEN) {
         btnEN.addEventListener('click', () => setLanguage('en'));
+    }
+}
+
+/**
+ * Wire theme switcher (Dark Mode)
+ */
+function wireThemeSwitcher() {
+    const btnLight = document.getElementById('btnLight');
+    const btnDark = document.getElementById('btnDark');
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem('diamate-theme') || 'light';
+    setTheme(savedTheme);
+    
+    if (btnLight) {
+        btnLight.addEventListener('click', () => setTheme('light'));
+    }
+    
+    if (btnDark) {
+        btnDark.addEventListener('click', () => setTheme('dark'));
+    }
+}
+
+/**
+ * Set theme (light/dark)
+ */
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('diamate-theme', theme);
+    
+    document.getElementById('btnLight')?.classList.toggle('active', theme === 'light');
+    document.getElementById('btnDark')?.classList.toggle('active', theme === 'dark');
+    
+    // Update meta theme-color for mobile browsers
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+        metaTheme.setAttribute('content', theme === 'dark' ? '#121212' : '#2E7D32');
     }
 }
 

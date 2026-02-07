@@ -22,13 +22,16 @@
         "NSHealthShareUsageDescription": "DiaMate, diyabet yönetiminizi kişiselleştirmek için sağlık verilerinizi okur.",
         "NSHealthUpdateUsageDescription": "DiaMate, öğün ve insülin kayıtlarınızı Apple Health'e yazabilir.",
         "NSCameraUsageDescription": "DiaMate, yemek fotoğraflarını analiz etmek için kameranızı kullanır.",
-        "NSPhotoLibraryUsageDescription": "DiaMate, yemek fotoğraflarını analiz etmek için fotoğraflarınıza erişir."
+        "NSPhotoLibraryUsageDescription": "DiaMate, yemek fotoğraflarını analiz etmek için fotoğraflarınıza erişir.",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
         "com.apple.developer.healthkit": true,
         "com.apple.developer.healthkit.background-delivery": true
       },
       "associatedDomains": [
+        "applinks:diamate.org",
+        "webcredentials:diamate.org",
         "applinks:diamate.org",
         "webcredentials:diamate.org"
       ]
@@ -41,7 +44,8 @@
       "package": "org.diamate.app",
       "versionCode": 1,
       "permissions": [
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -56,6 +60,12 @@
         "expo-image-picker",
         {
           "photosPermission": "DiaMate yemek fotoğraflarını analiz etmek için fotoğraflarınıza erişir."
+        }
+      ],
+      [
+        "react-native-health",
+        {
+          "isClinicalDataEnabled": false
         }
       ]
     ],

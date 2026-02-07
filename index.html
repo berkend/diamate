@@ -32,6 +32,42 @@
             --text-secondary: #6B7280;
             --border: #E5E7EB;
             --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --card-bg: #FFFFFF;
+            --input-bg: #F5F7FA;
+        }
+        
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --primary: #4CAF50;
+            --primary-light: #66BB6A;
+            --primary-dark: #2E7D32;
+            --surface: #1E1E1E;
+            --background: #121212;
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --border: #333333;
+            --shadow: 0 4px 20px rgba(0,0,0,0.4);
+            --card-bg: #1E1E1E;
+            --input-bg: #2A2A2A;
+        }
+        
+        [data-theme="dark"] .app {
+            background: var(--background);
+        }
+        
+        [data-theme="dark"] .lang-switch {
+            background: rgba(30,30,30,0.98);
+        }
+        
+        [data-theme="dark"] .input {
+            background: var(--input-bg);
+            border-color: var(--border);
+            color: var(--text-primary);
+        }
+        
+        [data-theme="dark"] .setup-card,
+        [data-theme="dark"] .health-card {
+            background: var(--card-bg);
         }
         
         body {
@@ -70,12 +106,17 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Language Switcher */
-        .lang-switch {
+        /* Language & Theme Switcher */
+        .top-controls {
             position: fixed;
             top: 12px;
             right: 12px;
             z-index: 9999;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .lang-switch, .theme-switch {
             display: flex;
             gap: 4px;
             background: rgba(255,255,255,0.98);
@@ -83,6 +124,26 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             backdrop-filter: blur(10px);
+        }
+        
+        [data-theme="dark"] .lang-switch,
+        [data-theme="dark"] .theme-switch {
+            background: rgba(30,30,30,0.98);
+        }
+        
+        .theme-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+        }
+        
+        .theme-btn.active {
+            background: var(--primary);
+            box-shadow: 0 2px 8px rgba(46,125,50,0.3);
         }
         
         .lang-btn {
@@ -346,10 +407,16 @@
 </head>
 <body>
     <div class="app">
-        <!-- Language Switcher -->
-        <div class="lang-switch">
-            <button class="lang-btn active" id="btnTR">TR</button>
-            <button class="lang-btn" id="btnEN">EN</button>
+        <!-- Top Controls: Language & Theme -->
+        <div class="top-controls">
+            <div class="theme-switch">
+                <button class="theme-btn active" id="btnLight" title="Light Mode">☀️</button>
+                <button class="theme-btn" id="btnDark" title="Dark Mode">🌙</button>
+            </div>
+            <div class="lang-switch">
+                <button class="lang-btn active" id="btnTR">TR</button>
+                <button class="lang-btn" id="btnEN">EN</button>
+            </div>
         </div>
 
         <!-- LOGIN SCREEN -->
