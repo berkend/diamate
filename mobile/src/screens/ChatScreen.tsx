@@ -30,7 +30,7 @@ interface ChatMessage {
 export function ChatScreen() {
   const navigation = useNavigation<any>();
   const scrollViewRef = useRef<ScrollView>(null);
-  const { entitlement, profile, getRecentContext, aiPersonalizationEnabled, language } = useAppStore();
+  const { entitlement, profile, getRecentContext, aiPersonalizationEnabled, language, setEntitlement } = useAppStore();
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
@@ -104,6 +104,15 @@ export function ChatScreen() {
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Increment local usage count
+      setEntitlement({
+        ...entitlement,
+        usage: {
+          ...entitlement.usage,
+          dailyChatCount: entitlement.usage.dailyChatCount + 1,
+        },
+      });
 
       // Handle dose calculator button
       if (response.showCalculatorButton) {

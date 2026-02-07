@@ -63,6 +63,56 @@ exports.handler = async (event) => {
   }
 
   try {
+    // === QUOTA CHECK ===
+    let isPro = false;
+    const authHeader = event.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '');
+    let userId = null;
+
+    if (token && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+      const { data: { user } } = await supabase.auth.getUser(token);
+      if (user) {
+        userId = user.id;
+
+        // Check subscription
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('plan, status, current_period_end')
+          .eq('user_id', userId)
+          .single();
+
+        if (sub && sub.status === 'active' && (!sub.current_period_end || new Date(sub.current_period_end) > new Date())) {
+          isPro = sub.plan === 'pro';
+        }
+
+        if (!isPro) {
+          // Count today's chat usage
+          const today = new Date().toISOString().split('T')[0];
+          const { count } = await supabase
+            .from('usage_tracking')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('feature', 'chat')
+            .gte('used_at', today + 'T00:00:00Z');
+
+          if ((count || 0) >= 5) {
+            return {
+              statusCode: 429,
+              headers,
+              body: JSON.stringify({
+                error: 'quota_exceeded',
+                code: 'quota_exceeded',
+                message: lang === 'en'
+                  ? 'Daily chat limit reached (5/day). Upgrade to PRO for unlimited!'
+                  : 'Günlük sohbet limitine ulaştınız (5/gün). Sınırsız erişim için PRO\'ya yükseltin!'
+              })
+            };
+          }
+        }
+      }
+    }
+
     const systemPrompt = buildSystemPrompt(lang, recentContext);
     const aiMessages = [{ role: 'system', content: systemPrompt }, ...messages.slice(-10)];
 
@@ -85,20 +135,15 @@ exports.handler = async (event) => {
       aiResponse = addDoseDisclaimer(aiResponse, lang);
     }
 
-    // Track usage if user is authenticated
-    const authHeader = event.headers.authorization || '';
-    const token = authHeader.replace('Bearer ', '');
-    if (token && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+    // Track usage
+    if (userId && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
       try {
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-        const { data: { user } } = await supabase.auth.getUser(token);
-        if (user) {
-          await supabase.from('usage_tracking').insert({
-            user_id: user.id,
-            feature: 'chat',
-            used_at: new Date().toISOString()
-          });
-        }
+        await supabase.from('usage_tracking').insert({
+          user_id: userId,
+          feature: 'chat',
+          used_at: new Date().toISOString()
+        });
       } catch (e) {
         console.warn('Usage tracking failed:', e.message);
       }

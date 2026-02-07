@@ -47,7 +47,7 @@ interface AppState {
   // Computed
   getRecentContext: () => object;
   getTodayGlucose: () => GlucoseReading[];
-  getWeekStats: () => object;
+  getWeekStats: () => { avgBG: number | null; timeInRange: number | null; readings: number; hypoCount?: number; hyperCount?: number };
 }
 
 const DEFAULT_ENTITLEMENT: Entitlement = {

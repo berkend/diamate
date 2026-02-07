@@ -10,6 +10,9 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  Modal,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -19,10 +22,12 @@ import { GlucoseReading, GlucoseTrend } from '../types';
 
 export function HomeScreen() {
   const navigation = useNavigation<any>();
-  const { profile, glucoseReadings, getTodayGlucose, getWeekStats } = useAppStore();
+  const { profile, getTodayGlucose, getWeekStats, addGlucoseReading } = useAppStore();
   const [refreshing, setRefreshing] = useState(false);
   const [latestGlucose, setLatestGlucose] = useState<GlucoseReading | null>(null);
   const [trend, setTrend] = useState<GlucoseTrend | undefined>();
+  const [showGlucoseModal, setShowGlucoseModal] = useState(false);
+  const [glucoseInput, setGlucoseInput] = useState('');
 
   useEffect(() => {
     loadData();
@@ -162,6 +167,15 @@ export function HomeScreen() {
         <Text style={styles.sectionTitle}>Hızlı İşlemler</Text>
         <View style={styles.actionsGrid}>
           <TouchableOpacity 
+            style={[styles.actionCard, { backgroundColor: '#F0FDF4' }]}
+            onPress={() => setShowGlucoseModal(true)}
+          >
+            <Text style={styles.actionIcon}>🩸</Text>
+            <Text style={styles.actionTitle}>Glukoz Ekle</Text>
+            <Text style={styles.actionSubtitle}>Manuel giriş</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
             style={styles.actionCard}
             onPress={() => navigation.navigate('Meal')}
           >
@@ -177,15 +191,6 @@ export function HomeScreen() {
             <Text style={styles.actionIcon}>🤖</Text>
             <Text style={styles.actionTitle}>AI Koç</Text>
             <Text style={styles.actionSubtitle}>Soru sor</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.actionCard}
-            onPress={() => navigation.navigate('Insights')}
-          >
-            <Text style={styles.actionIcon}>💡</Text>
-            <Text style={styles.actionTitle}>Öneriler</Text>
-            <Text style={styles.actionSubtitle}>Kişisel</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -221,6 +226,55 @@ export function HomeScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* Manual Glucose Entry Modal */}
+      <Modal visible={showGlucoseModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>🩸 Glukoz Ölçümü Ekle</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={glucoseInput}
+              onChangeText={setGlucoseInput}
+              placeholder="Örn: 120"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="numeric"
+              autoFocus
+            />
+            <Text style={styles.modalUnit}>mg/dL</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => { setShowGlucoseModal(false); setGlucoseInput(''); }}
+              >
+                <Text style={styles.modalCancelText}>İptal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveBtn}
+                onPress={() => {
+                  const val = parseInt(glucoseInput);
+                  if (!val || val < 20 || val > 600) {
+                    Alert.alert('Hata', 'Geçerli bir değer girin (20-600)');
+                    return;
+                  }
+                  addGlucoseReading({
+                    id: `manual_${Date.now()}`,
+                    mgdl: val,
+                    timestamp: new Date().toISOString(),
+                    source: 'manual',
+                  });
+                  setShowGlucoseModal(false);
+                  setGlucoseInput('');
+                  loadData();
+                  Alert.alert('Kaydedildi', `${val} mg/dL eklendi`);
+                }}
+              >
+                <Text style={styles.modalSaveText}>Kaydet</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -417,5 +471,71 @@ const styles = StyleSheet.create({
   readingTime: {
     fontSize: 14,
     color: '#6B7280',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 20,
+  },
+  modalInput: {
+    fontSize: 48,
+    fontWeight: '800',
+    color: '#1F2937',
+    textAlign: 'center',
+    width: '100%',
+    borderBottomWidth: 3,
+    borderBottomColor: '#667eea',
+    paddingVertical: 8,
+  },
+  modalUnit: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  modalCancelBtn: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  modalSaveBtn: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: '#667eea',
+    alignItems: 'center',
+  },
+  modalSaveText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

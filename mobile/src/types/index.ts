@@ -9,6 +9,7 @@ export interface GlucoseReading {
   source?: string;
   context?: 'fasting' | 'before_meal' | 'after_meal' | 'bedtime' | 'other';
   note?: string;
+  device?: string;
 }
 
 export type GlucoseTrend = 'rising_fast' | 'rising' | 'stable' | 'falling' | 'falling_fast';
@@ -51,6 +52,8 @@ export interface UserProfile {
   height?: number;
   weight?: number;
   activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active';
+  activeInsulinHours?: number;
+  insulinType?: string;
   setupComplete?: boolean;
 }
 
@@ -69,10 +72,10 @@ export interface SleepData {
 }
 
 export interface AIMessage {
-  id: string;
+  id?: string;
   role: 'user' | 'assistant';
   content: string;
-  timestamp: string;
+  timestamp?: string;
 }
 
 export interface AIAnalysis {
