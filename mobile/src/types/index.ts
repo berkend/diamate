@@ -81,3 +81,61 @@ export interface AIAnalysis {
   confidence: number;
   suggestions?: string[];
 }
+
+
+export interface Entitlement {
+  isPro: boolean;
+  plan: string;
+  quotas: {
+    chatPerDay: number;
+    visionPerDay: number;
+    pdfExport?: boolean;
+    doctorShare?: boolean;
+    cloudSync?: boolean;
+    reminders?: number;
+  };
+  usage: {
+    dailyChatCount: number;
+    dailyVisionCount: number;
+    lastResetDate: string;
+  };
+}
+
+export interface MealLog {
+  id: string;
+  timestamp: string;
+  items: MealItem[];
+  totalCarbs: number;
+  photoUrl?: string;
+  source?: string;
+  note?: string;
+}
+
+export interface AIMemory {
+  profileFacts: Record<string, any>;
+  memorySummary: string;
+  conversationHistory: AIMessage[];
+}
+
+export interface AIRequest {
+  messages: { role: string; content: string }[];
+  lang?: string;
+  recentContext?: any;
+}
+
+export interface AIResponse {
+  text: string;
+  showCalculatorButton?: boolean;
+}
+
+export interface AIVisionRequest {
+  imageDataUrl: string;
+  lang?: string;
+}
+
+export interface AIVisionResponse {
+  items: MealItem[];
+  total_carbs_g: number;
+  notes: string;
+  confidence: string;
+}

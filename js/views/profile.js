@@ -2,9 +2,9 @@
  * DiaMate Profile View
  */
 import { getProfile, setProfile, resetDB, isSetupComplete, getReminders, addReminder, toggleReminder, deleteReminder, getFavoriteMeals, deleteFavoriteMeal } from '../store.js';
-import { createToast, showConfirm, t } from '../utils.js';
+import { createToast, showConfirm, t, getLang } from '../utils.js';
 import { navigateTo } from '../router.js';
-import { signOut, getCurrentUser, saveProfileToCloud, getSession } from '../supabase.js';
+import { signOut, getCurrentUser, saveProfileToCloud } from '../supabase.js';
 import { getEntitlement, clearEntitlementCache } from '../ai-assistant.js';
 
 /**
@@ -100,7 +100,7 @@ export async function renderProfileView() {
                 ✅ ${t('Bulut senkronizasyonu', 'Cloud sync')}
             </div>
             <button id="btnUpgradePro" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(156,39,176,0.3);">
-                👑 ${t('PRO\'ya Yükselt', 'Upgrade to PRO')}
+                📱 ${t('Mobil Uygulamadan PRO\'ya Yükselt', 'Upgrade to PRO via Mobile App')}
             </button>
         </div>
         `}
@@ -198,48 +198,13 @@ function wireProfileEvents(user) {
     document.getElementById('btnEditProfile')?.addEventListener('click', showEditProfileModal);
     document.getElementById('btnAddReminder')?.addEventListener('click', showAddReminderModal);
     
-    // PRO Upgrade button
-    document.getElementById('btnUpgradePro')?.addEventListener('click', async () => {
-        if (!user) {
-            createToast('warning', t('PRO abonelik için giriş yapmanız gerekiyor', 'Please sign in to subscribe to PRO'));
-            return;
-        }
-        
-        try {
-            const btn = document.getElementById('btnUpgradePro');
-            btn.disabled = true;
-            btn.textContent = '⏳ ' + t('Yönlendiriliyor...', 'Redirecting...');
-            
-            const session = await getSession();
-            const response = await fetch('/.netlify/functions/create-checkout', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session?.access_token || ''}`
-                },
-                body: JSON.stringify({
-                    userId: user.id,
-                    email: user.email,
-                    plan: 'pro_monthly'
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.url) {
-                window.location.href = data.url;
-            } else {
-                throw new Error(data.error || 'Checkout failed');
-            }
-        } catch (e) {
-            console.error('Checkout error:', e);
-            createToast('error', t('Ödeme sayfası açılamadı: ' + e.message, 'Could not open checkout: ' + e.message));
-            const btn = document.getElementById('btnUpgradePro');
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = '👑 ' + t('PRO\'ya Yükselt', 'Upgrade to PRO');
-            }
-        }
+    // PRO Upgrade button - redirect to mobile app
+    document.getElementById('btnUpgradePro')?.addEventListener('click', () => {
+        const lang = getLang();
+        const message = lang === 'en'
+            ? 'PRO subscription is available through the DiaMate mobile app on App Store and Google Play.'
+            : 'PRO abonelik DiaMate mobil uygulaması üzerinden App Store ve Google Play\'den satın alınabilir.';
+        createToast('info', message);
     });
     
     // Reminder toggle/delete events
