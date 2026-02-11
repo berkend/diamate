@@ -83,14 +83,13 @@ async function initApp() {
     
     // Check if setup is complete
     const profile = getProfile();
-    if (profile.setupComplete) {
+    if (!currentUser) {
+        navigateTo('login');
+    } else if (profile.setupComplete) {
         navigateTo('dashboard');
         updateHeaderUI();
-    } else if (currentUser) {
-        // User is logged in but hasn't completed setup
-        navigateTo('setup');
     } else {
-        navigateTo('login');
+        navigateTo('setup');
     }
     
     // Wire language switcher
