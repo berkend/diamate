@@ -109,7 +109,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       process.env.API_URL || 'https://diamate.org/.netlify/functions',
     supabaseUrl:
       process.env.SUPABASE_URL || 'https://rvqmbawssxhzqldkdpjo.supabase.co',
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2cW1iYXdzc3hoenFsZGtkcGpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MDIxNjQsImV4cCI6MjA4NTk3ODE2NH0.8hlIUAYrhBDtOBDJ0PNuAiUguhuUow2FiUO26U1gbao',
     eas: {
       projectId: '42a5b3b7-6185-4cec-a94b-44b7f30d1368',
     },

@@ -54,14 +54,29 @@ export function OnboardingScreen() {
     try {
       const granted = await HealthManager.requestPermissions();
       if (granted) {
-        // Sync initial data
         await HealthManager.syncGlucoseReadings(30);
+        Alert.alert(
+          'Bağlantı Başarılı',
+          'Sağlık verileriniz senkronize edildi.',
+          [{ text: 'Devam', onPress: () => setStep('complete') }]
+        );
+      } else {
+        // Permission denied — graceful fallback, app continues
+        Alert.alert(
+          'İzin Verilmedi',
+          'Sağlık verisi erişimi olmadan da DiaMate\'i kullanabilirsiniz. Manuel glukoz girişi, AI sohbet ve yemek analizi çalışmaya devam eder.\n\nDaha sonra Ayarlar > Sağlık Bağlantıları\'ndan bağlayabilirsiniz.',
+          [{ text: 'Anladım', onPress: () => setStep('complete') }]
+        );
       }
     } catch (error) {
-      console.error('Health permission error:', error);
+      // Error — still continue, health is optional
+      Alert.alert(
+        'Bağlantı Kurulamadı',
+        'Sağlık bağlantısı şu an kurulamadı. Endişelenmeyin, uygulamayı sağlık verisi olmadan da kullanabilirsiniz.',
+        [{ text: 'Devam', onPress: () => setStep('complete') }]
+      );
     }
     setLoading(false);
-    setStep('complete');
   };
 
   const handleSkipHealth = () => {
@@ -87,7 +102,7 @@ export function OnboardingScreen() {
   };
 
   const renderWelcome = () => (
-    <View style={styles.stepContainer}>
+    <ScrollView style={styles.stepContainer} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <Text style={styles.emoji}>🩺</Text>
       <Text style={styles.title}>DiaMate'e Hoş Geldiniz</Text>
       <Text style={styles.subtitle}>
@@ -104,7 +119,7 @@ export function OnboardingScreen() {
       <TouchableOpacity style={styles.primaryButton} onPress={() => setStep('profile')}>
         <Text style={styles.primaryButtonText}>Başla</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 
   const renderProfile = () => (
@@ -243,7 +258,7 @@ export function OnboardingScreen() {
   );
 
   const renderHealth = () => (
-    <View style={styles.stepContainer}>
+    <ScrollView style={styles.stepContainer} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <Text style={styles.emoji}>{Platform.OS === 'ios' ? '🍎' : '💚'}</Text>
       <Text style={styles.stepTitle}>
         {Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect'}
@@ -253,12 +268,24 @@ export function OnboardingScreen() {
         {Platform.OS === 'ios' ? " Apple Health'e" : " Health Connect'e"} veri yazıyorsa, 
         DiaMate bu verileri otomatik olarak görebilir.
       </Text>
+
+      <View style={styles.optionalBadge}>
+        <Text style={styles.optionalBadgeText}>
+          ℹ️ Bu adım isteğe bağlıdır. Sağlık verisi olmadan da DiaMate'i kullanabilirsiniz.
+        </Text>
+      </View>
       
       <View style={styles.permissionList}>
         <PermissionItem icon="📊" text="Kan şekeri ölçümleri" />
         <PermissionItem icon="🍽️" text="Beslenme verileri" />
         <PermissionItem icon="🚶" text="Aktivite verileri" />
         <PermissionItem icon="😴" text="Uyku verileri" />
+      </View>
+
+      <View style={styles.privacyNotice}>
+        <Text style={styles.privacyNoticeText}>
+          🔒 Sağlık verileriniz yalnızca diyabet yönetimi için kullanılır. Reklam, pazarlama veya veri madenciliği amacıyla kullanılmaz.
+        </Text>
       </View>
       
       <TouchableOpacity 
@@ -274,11 +301,11 @@ export function OnboardingScreen() {
       <TouchableOpacity style={styles.secondaryButton} onPress={handleSkipHealth}>
         <Text style={styles.secondaryButtonText}>Şimdilik Atla</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 
   const renderComplete = () => (
-    <View style={styles.stepContainer}>
+    <ScrollView style={styles.stepContainer} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
       <Text style={styles.emoji}>🎉</Text>
       <Text style={styles.title}>Hazırsınız!</Text>
       <Text style={styles.subtitle}>
@@ -289,7 +316,7 @@ export function OnboardingScreen() {
       <TouchableOpacity style={styles.primaryButton} onPress={handleComplete}>
         <Text style={styles.primaryButtonText}>Başla</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 
   return (
@@ -435,7 +462,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   segmentTextActive: {
-    color: '#667eea',
+    color: '#16A34A',
   },
   optionGrid: {
     flexDirection: 'row',
@@ -453,8 +480,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   optionCardActive: {
-    borderColor: '#667eea',
-    backgroundColor: '#EEF2FF',
+    borderColor: '#16A34A',
+    backgroundColor: '#F0FDF4',
   },
   optionText: {
     fontSize: 15,
@@ -462,10 +489,10 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   optionTextActive: {
-    color: '#667eea',
+    color: '#16A34A',
   },
   permissionList: {
-    marginBottom: 32,
+    marginBottom: 16,
   },
   permissionItem: {
     flexDirection: 'row',
@@ -489,7 +516,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   primaryButton: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#16A34A',
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
@@ -512,5 +539,27 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  optionalBadge: {
+    backgroundColor: '#EFF6FF',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  optionalBadgeText: {
+    fontSize: 13,
+    color: '#1E40AF',
+    lineHeight: 18,
+  },
+  privacyNotice: {
+    backgroundColor: '#F0FDF4',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  privacyNoticeText: {
+    fontSize: 12,
+    color: '#166534',
+    lineHeight: 18,
   },
 });
