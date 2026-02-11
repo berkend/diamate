@@ -102,7 +102,7 @@ export function OnboardingScreen() {
   };
 
   const renderWelcome = () => (
-    <ScrollView style={styles.stepContainer} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.stepContainer} contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
       <Text style={styles.emoji}>🩺</Text>
       <Text style={styles.title}>DiaMate'e Hoş Geldiniz</Text>
       <Text style={styles.subtitle}>
@@ -258,7 +258,7 @@ export function OnboardingScreen() {
   );
 
   const renderHealth = () => (
-    <ScrollView style={styles.stepContainer} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.stepContainer} contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
       <Text style={styles.emoji}>{Platform.OS === 'ios' ? '🍎' : '💚'}</Text>
       <Text style={styles.stepTitle}>
         {Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect'}
@@ -305,7 +305,7 @@ export function OnboardingScreen() {
   );
 
   const renderComplete = () => (
-    <ScrollView style={styles.stepContainer} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.stepContainer} contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
       <Text style={styles.emoji}>🎉</Text>
       <Text style={styles.title}>Hazırsınız!</Text>
       <Text style={styles.subtitle}>
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
-    marginTop: 'auto',
+    marginTop: 32,
   },
   primaryButtonText: {
     color: '#FFFFFF',
