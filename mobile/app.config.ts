@@ -54,7 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: '#0D3B2E',
     },
     package: 'org.diamate.app',
-    versionCode: 5,
+    versionCode: 10,
     permissions: [
       'android.permission.CAMERA',
       // Health Connect permissions — minimum required

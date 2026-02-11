@@ -46,7 +46,7 @@ export async function clearAuthToken(): Promise<void> {
 /**
  * Make authenticated API request
  */
-async function apiRequest<T>(
+export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -141,7 +141,7 @@ export async function sendChatMessage(request: AIChatRequest): Promise<AIChatRes
 /**
  * Handle API errors with user-friendly messages
  */
-function handleAPIError(error: APIError, lang: 'tr' | 'en'): AIChatResponse {
+function handleAPIError(error: APIError, lang?: string): AIChatResponse {
   const messages: Record<number, { tr: string; en: string }> = {
     401: {
       tr: '🔐 Oturum süresi doldu. Lütfen tekrar giriş yapın.',

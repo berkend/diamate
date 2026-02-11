@@ -43,13 +43,16 @@ export function HealthConnectionsScreen() {
       const granted = await HealthManager.requestPermissions();
       if (granted) {
         await HealthManager.syncGlucoseReadings(30);
-        Alert.alert('Başarılı', 'Sağlık verileri bağlandı!');
+        Alert.alert('Başarılı', 'Sağlık verileri bağlandı ve senkronize edildi.');
       } else {
-        Alert.alert('İzin Gerekli', 'Sağlık verilerine erişim izni verilmedi.');
+        Alert.alert(
+          'İzin Verilmedi',
+          'Sağlık verisi erişimi reddedildi. DiaMate sağlık verisi olmadan da çalışmaya devam eder. Manuel glukoz girişi yapabilirsiniz.\n\nİzni daha sonra sistem ayarlarından verebilirsiniz.'
+        );
       }
       await checkConnection();
     } catch (error) {
-      Alert.alert('Hata', 'Bağlantı kurulamadı.');
+      Alert.alert('Hata', 'Bağlantı kurulamadı. Uygulama sağlık verisi olmadan çalışmaya devam eder.');
     }
     setLoading(false);
   };
@@ -93,7 +96,7 @@ export function HealthConnectionsScreen() {
         </View>
 
         {loading ? (
-          <ActivityIndicator size="large" color="#667eea" style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color="#16A34A" style={{ marginTop: 40 }} />
         ) : (
           <>
             <View style={styles.card}>
@@ -110,7 +113,7 @@ export function HealthConnectionsScreen() {
               {connection?.connected ? (
                 <>
                   <View style={styles.permissionsList}>
-                    {connection.permissions.map((perm, i) => (
+                    {(connection.permissions || []).map((perm, i) => (
                       <View key={i} style={styles.permissionItem}>
                         <Text style={styles.permissionCheck}>✓</Text>
                         <Text style={styles.permissionText}>{perm}</Text>
@@ -159,6 +162,19 @@ export function HealthConnectionsScreen() {
                 için gelecek güncellemeleri takip edin.
               </Text>
             </View>
+
+            <View style={styles.privacyCard}>
+              <Text style={styles.privacyTitle}>🔒 Gizlilik</Text>
+              <Text style={styles.privacyText}>
+                Sağlık verileriniz yalnızca diyabet yönetimi amacıyla kullanılır. Reklam, pazarlama veya veri madenciliği için kullanılmaz ve üçüncü taraflarla paylaşılmaz.
+              </Text>
+            </View>
+
+            <View style={styles.disclaimerCard}>
+              <Text style={styles.disclaimerText}>
+                ⚠️ DiaMate tıbbi bir cihaz değildir. Tanı koymaz ve tedavi önermez. Tedavi kararlarınız için her zaman doktorunuza danışın.
+              </Text>
+            </View>
           </>
         )}
       </ScrollView>
@@ -171,7 +187,7 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   header: { padding: 20 },
   backButton: { marginBottom: 16 },
-  backButtonText: { fontSize: 16, color: '#667eea', fontWeight: '600' },
+  backButtonText: { fontSize: 16, color: '#16A34A', fontWeight: '600' },
   title: { fontSize: 24, fontWeight: '700', color: '#1F2937', marginBottom: 8 },
   subtitle: { fontSize: 15, color: '#6B7280' },
   card: { margin: 20, backgroundColor: '#FFFFFF', borderRadius: 20, padding: 20 },
@@ -186,15 +202,20 @@ const styles = StyleSheet.create({
   permissionText: { fontSize: 14, color: '#4B5563' },
   lastSync: { fontSize: 12, color: '#9CA3AF', marginBottom: 16 },
   buttonRow: { flexDirection: 'row', gap: 12 },
-  syncButton: { flex: 1, backgroundColor: '#667eea', padding: 14, borderRadius: 12, alignItems: 'center' },
+  syncButton: { flex: 1, backgroundColor: '#16A34A', padding: 14, borderRadius: 12, alignItems: 'center' },
   syncButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
   disconnectButton: { flex: 1, backgroundColor: '#FEE2E2', padding: 14, borderRadius: 12, alignItems: 'center' },
   disconnectButtonText: { color: '#DC2626', fontSize: 15, fontWeight: '600' },
   buttonDisabled: { opacity: 0.6 },
   description: { fontSize: 14, color: '#6B7280', lineHeight: 20, marginBottom: 16 },
-  connectButton: { backgroundColor: '#667eea', padding: 16, borderRadius: 12, alignItems: 'center' },
+  connectButton: { backgroundColor: '#16A34A', padding: 16, borderRadius: 12, alignItems: 'center' },
   connectButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
   infoCard: { margin: 20, marginTop: 0, backgroundColor: '#EFF6FF', borderRadius: 16, padding: 20 },
   infoTitle: { fontSize: 16, fontWeight: '600', color: '#1E40AF', marginBottom: 8 },
   infoText: { fontSize: 14, color: '#3B82F6', lineHeight: 20 },
+  privacyCard: { margin: 20, marginTop: 0, backgroundColor: '#F0FDF4', borderRadius: 16, padding: 20 },
+  privacyTitle: { fontSize: 16, fontWeight: '600', color: '#166534', marginBottom: 8 },
+  privacyText: { fontSize: 13, color: '#15803D', lineHeight: 20 },
+  disclaimerCard: { marginHorizontal: 20, marginBottom: 20, backgroundColor: '#FEF3C7', borderRadius: 12, padding: 16 },
+  disclaimerText: { fontSize: 12, color: '#92400E', lineHeight: 18 },
 });

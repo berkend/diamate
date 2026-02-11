@@ -56,7 +56,7 @@ export async function initSupabase(): Promise<SupabaseClient> {
   });
 
   // Listen for auth changes
-  supabase.auth.onAuthStateChange(async (event, session) => {
+  supabase.auth.onAuthStateChange(async (_event, session) => {
     if (session?.access_token) {
       await setAuthToken(session.access_token);
     } else {

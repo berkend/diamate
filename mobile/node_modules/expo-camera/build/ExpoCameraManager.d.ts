@@ -1,3 +1,4 @@
-declare const CameraManager: Record<string, any>;
-export default CameraManager;
+import { CameraNativeModule } from './Camera.types';
+declare const _default: CameraNativeModule;
+export default _default;
 //# sourceMappingURL=ExpoCameraManager.d.ts.map

@@ -9,7 +9,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, StyleSheet } from 'react-native';
+
+// UI
+import { ErrorBoundary } from './src/ui/ErrorBoundary';
 
 // Screens
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
@@ -29,6 +32,9 @@ import { initSupabase } from './src/services/supabase';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// DiaMate brand color
+const BRAND_GREEN = '#16A34A';
+
 // Tab Navigator for main app
 function MainTabs() {
   return (
@@ -36,49 +42,49 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: '#667eea',
+        tabBarActiveTintColor: BRAND_GREEN,
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarLabelStyle: styles.tabLabel,
       }}
     >
-      <Tab.Screen 
-        name="Home" 
+      <Tab.Screen
+        name="Home"
         component={HomeScreen}
         options={{
           tabBarLabel: 'Ana Sayfa',
-          tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>🏠</Text>
+          tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>🏠</Text>,
         }}
       />
-      <Tab.Screen 
-        name="Meal" 
+      <Tab.Screen
+        name="Meal"
         component={MealScreen}
         options={{
           tabBarLabel: 'Öğün',
-          tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>📸</Text>
+          tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>📸</Text>,
         }}
       />
-      <Tab.Screen 
-        name="Chat" 
+      <Tab.Screen
+        name="Chat"
         component={ChatScreen}
         options={{
           tabBarLabel: 'AI Koç',
-          tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>🤖</Text>
+          tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>🤖</Text>,
         }}
       />
-      <Tab.Screen 
-        name="Insights" 
+      <Tab.Screen
+        name="Insights"
         component={InsightsScreen}
         options={{
           tabBarLabel: 'Öneriler',
-          tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>💡</Text>
+          tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>💡</Text>,
         }}
       />
-      <Tab.Screen 
-        name="Settings" 
+      <Tab.Screen
+        name="Settings"
         component={SettingsScreen}
         options={{
           tabBarLabel: 'Ayarlar',
-          tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>⚙️</Text>
+          tabBarIcon: ({ color }) => <Text style={[styles.tabIcon, { color }]}>⚙️</Text>,
         }}
       />
     </Tab.Navigator>
@@ -89,7 +95,6 @@ export default function App() {
   const { isOnboarded, initialize } = useAppStore();
 
   useEffect(() => {
-    // Initialize services
     const init = async () => {
       await initSupabase();
       await initPurchases();
@@ -99,32 +104,34 @@ export default function App() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <StatusBar style="auto" />
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            {!isOnboarded ? (
-              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-            ) : (
-              <>
-                <Stack.Screen name="Main" component={MainTabs} />
-                <Stack.Screen 
-                  name="Paywall" 
-                  component={PaywallScreen}
-                  options={{ presentation: 'modal' }}
-                />
-                <Stack.Screen 
-                  name="HealthConnections" 
-                  component={HealthConnectionsScreen}
-                  options={{ presentation: 'modal' }}
-                />
-              </>
-            )}
-          </Stack.Navigator>
-        </NavigationContainer>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <StatusBar style="auto" />
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+              {!isOnboarded ? (
+                <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+              ) : (
+                <>
+                  <Stack.Screen name="Main" component={MainTabs} />
+                  <Stack.Screen
+                    name="Paywall"
+                    component={PaywallScreen}
+                    options={{ presentation: 'modal' }}
+                  />
+                  <Stack.Screen
+                    name="HealthConnections"
+                    component={HealthConnectionsScreen}
+                    options={{ presentation: 'modal' }}
+                  />
+                </>
+              )}
+            </Stack.Navigator>
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 

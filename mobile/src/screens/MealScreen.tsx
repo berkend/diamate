@@ -52,12 +52,10 @@ export function MealScreen() {
 
     const result = useCamera
       ? await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
           quality: 0.8,
           base64: true,
         })
       : await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
           quality: 0.8,
           base64: true,
         });
@@ -191,7 +189,7 @@ export function MealScreen() {
 
             {analyzing ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#667eea" />
+                <ActivityIndicator size="large" color="#16A34A" />
                 <Text style={styles.loadingText}>AI Analiz Ediyor...</Text>
                 <Text style={styles.loadingSubtext}>Yemekler tanınıyor</Text>
               </View>
@@ -328,7 +326,7 @@ const styles = StyleSheet.create({
   proNoticeLink: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#667eea',
+    color: '#16A34A',
   },
   resultSection: {
     padding: 20,
@@ -375,7 +373,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   totalCard: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#16A34A',
     padding: 24,
     borderRadius: 20,
     alignItems: 'center',
@@ -463,7 +461,7 @@ const styles = StyleSheet.create({
   itemCarbs: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#667eea',
+    color: '#16A34A',
   },
   actionsRow: {
     flexDirection: 'row',
@@ -471,7 +469,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#667eea',
+    backgroundColor: '#16A34A',
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',

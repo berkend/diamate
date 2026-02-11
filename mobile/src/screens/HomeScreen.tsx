@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   connectButton: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#16A34A',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: '100%',
     borderBottomWidth: 3,
-    borderBottomColor: '#667eea',
+    borderBottomColor: '#16A34A',
     paddingVertical: 8,
   },
   modalUnit: {
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 14,
     borderRadius: 12,
-    backgroundColor: '#667eea',
+    backgroundColor: '#16A34A',
     alignItems: 'center',
   },
   modalSaveText: {

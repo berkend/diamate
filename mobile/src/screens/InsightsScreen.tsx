@@ -36,7 +36,6 @@ export function InsightsScreen() {
     const newInsights: Insight[] = [];
     const weekStats = getWeekStats();
     const todayReadings = getTodayGlucose();
-    const targetLow = profile?.targetLow || 70;
     const targetHigh = profile?.targetHigh || 180;
 
     // Time in range insight
@@ -286,7 +285,7 @@ const styles = StyleSheet.create({
   insightActionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#667eea',
+    color: '#16A34A',
   },
   disclaimer: {
     margin: 20,

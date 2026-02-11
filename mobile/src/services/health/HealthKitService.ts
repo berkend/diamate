@@ -7,6 +7,7 @@ import AppleHealthKit, {
   HealthValue,
   HealthKitPermissions,
   HealthInputOptions,
+  HealthUnit,
 } from 'react-native-health';
 import { GlucoseReading, GlucoseTrend } from '../../types';
 
@@ -15,7 +16,7 @@ const permissions: HealthKitPermissions = {
   permissions: {
     read: [
       AppleHealthKit.Constants.Permissions.BloodGlucose,
-      AppleHealthKit.Constants.Permissions.DietaryCarbohydrates,
+      (AppleHealthKit.Constants.Permissions as any).DietaryCarbohydrates || 'DietaryCarbohydrates',
       AppleHealthKit.Constants.Permissions.Steps,
       AppleHealthKit.Constants.Permissions.SleepAnalysis,
       AppleHealthKit.Constants.Permissions.Weight,
@@ -24,7 +25,7 @@ const permissions: HealthKitPermissions = {
     ],
     write: [
       AppleHealthKit.Constants.Permissions.BloodGlucose,
-      AppleHealthKit.Constants.Permissions.DietaryCarbohydrates,
+      (AppleHealthKit.Constants.Permissions as any).DietaryCarbohydrates || 'DietaryCarbohydrates',
     ],
   },
 };
@@ -60,11 +61,10 @@ class HealthKitServiceClass {
     if (!this.isAvailable()) return false;
     
     return new Promise((resolve) => {
-      AppleHealthKit.getAuthStatus(permissions, (error, result) => {
+      AppleHealthKit.getAuthStatus(permissions, (error: any, result: any) => {
         if (error) {
           resolve(false);
         } else {
-          // Check if we have at least read access to blood glucose
           resolve(result?.permissions?.read?.includes('BloodGlucose') ?? false);
         }
       });
@@ -89,9 +89,9 @@ class HealthKitServiceClass {
           console.log('Error getting glucose:', error);
           resolve([]);
         } else {
-          const readings: GlucoseReading[] = (results || []).map((sample, index) => ({
+          const readings: GlucoseReading[] = (results || []).map((sample: any, index: number) => ({
             id: `hk-${index}-${sample.startDate}`,
-            mgdl: Math.round(sample.value * 18), // Convert mmol/L to mg/dL if needed
+            mgdl: Math.round(sample.value * 18),
             timestamp: sample.startDate,
             source: sample.sourceName || 'Apple Health',
           }));
@@ -116,7 +116,7 @@ class HealthKitServiceClass {
     const options = {
       value: mgdl,
       date: (date || new Date()).toISOString(),
-      unit: 'mg/dL',
+      unit: 'mg/dL' as HealthUnit,
     };
 
     return new Promise((resolve) => {

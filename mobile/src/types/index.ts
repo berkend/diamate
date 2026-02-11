@@ -26,7 +26,9 @@ export interface Meal {
 export interface MealItem {
   name: string;
   carbs: number;
+  carbs_g?: number;
   portion?: string;
+  confidence?: string;
 }
 
 export interface InsulinDose {
@@ -42,7 +44,7 @@ export interface UserProfile {
   id?: string;
   name?: string;
   email?: string;
-  diabetesType?: 'T1' | 'T2' | 'Gestational' | 'Other';
+  diabetesType?: 'T1' | 'T2' | 'GDM' | 'Gestational' | 'Other';
   targetLow?: number;
   targetHigh?: number;
   icr?: number; // Insulin to Carb Ratio
@@ -54,6 +56,7 @@ export interface UserProfile {
   activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active';
   activeInsulinHours?: number;
   insulinType?: string;
+  language?: string;
   setupComplete?: boolean;
 }
 
@@ -89,6 +92,7 @@ export interface AIAnalysis {
 export interface Entitlement {
   isPro: boolean;
   plan: string;
+  expiresAt?: string;
   quotas: {
     chatPerDay: number;
     visionPerDay: number;
@@ -110,8 +114,10 @@ export interface MealLog {
   items: MealItem[];
   totalCarbs: number;
   photoUrl?: string;
+  photoUsed?: boolean;
   source?: string;
   note?: string;
+  notes?: string;
 }
 
 export interface AIMemory {
@@ -131,14 +137,37 @@ export interface AIResponse {
   showCalculatorButton?: boolean;
 }
 
-export interface AIVisionRequest {
-  imageDataUrl: string;
-  lang?: string;
-}
-
 export interface AIVisionResponse {
   items: MealItem[];
   total_carbs_g: number;
   notes: string;
   confidence: string;
+  error?: string;
+}
+
+export interface AIChatRequest {
+  messages: { role: string; content: string }[];
+  lang?: string;
+  recentContext?: any;
+}
+
+export interface AIChatResponse {
+  text: string;
+  showCalculatorButton?: boolean;
+  error?: string;
+}
+
+export interface AIVisionRequest {
+  imageBase64: string;
+  imageDataUrl?: string;
+  lang?: string;
+}
+
+export type HealthProvider = 'apple_health' | 'health_connect' | 'dexcom' | 'libre' | 'nightscout';
+
+export interface HealthConnection {
+  provider: HealthProvider;
+  connected: boolean;
+  lastSync?: string;
+  permissions?: string[];
 }

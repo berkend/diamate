@@ -8,6 +8,8 @@ import { useAppStore } from '../store/appStore';
 import { Entitlement } from '../types';
 import { apiRequest } from './api';
 
+// Workaround: apiRequest is used for IAP verification
+
 // Product IDs - must match App Store Connect & Google Play Console
 export const PRODUCTS = {
   PRO_MONTHLY: Platform.OS === 'ios' 
@@ -172,7 +174,7 @@ async function verifyPurchase(
   purchaseToken?: string
 ): Promise<{ verified: boolean; isPro: boolean }> {
   try {
-    return await apiRequest('/iap-verify', {
+    return await apiRequest<{ verified: boolean; isPro: boolean }>('/iap-verify', {
       method: 'POST',
       body: JSON.stringify({
         platform,

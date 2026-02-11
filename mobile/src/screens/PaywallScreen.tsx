@@ -13,7 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { getPackages, purchasePackage, restorePurchases } from '../services/purchases';
 import { useAppStore } from '../store/appStore';
 
@@ -30,7 +30,6 @@ interface Package {
 
 export function PaywallScreen() {
   const navigation = useNavigation();
-  const route = useRoute<any>();
   const { entitlement } = useAppStore();
   
   const [packages, setPackages] = useState<Package[]>([]);
@@ -141,7 +140,7 @@ export function PaywallScreen() {
 
         {/* Packages */}
         {loading ? (
-          <ActivityIndicator size="large" color="#667eea" style={{ marginVertical: 40 }} />
+          <ActivityIndicator size="large" color="#16A34A" style={{ marginVertical: 40 }} />
         ) : (
           <View style={styles.packagesContainer}>
             {packages.map((pkg) => {
@@ -175,7 +174,7 @@ export function PaywallScreen() {
                   </Text>
                   {isYearly && (
                     <Text style={styles.packageMonthly}>
-                      Aylık sadece {(pkg.product.price / 12).toFixed(2)} ₺
+                      Aylık sadece {((pkg.product.price || 0) / 12).toFixed(2)} ₺
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -314,8 +313,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   packageCardSelected: {
-    borderColor: '#667eea',
-    backgroundColor: '#EEF2FF',
+    borderColor: '#16A34A',
+    backgroundColor: '#F0FDF4',
   },
   saveBadge: {
     position: 'absolute',
@@ -347,13 +346,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   radioSelected: {
-    borderColor: '#667eea',
+    borderColor: '#16A34A',
   },
   radioInner: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#667eea',
+    backgroundColor: '#16A34A',
   },
   packageTitle: {
     fontSize: 17,
@@ -377,7 +376,7 @@ const styles = StyleSheet.create({
   },
   purchaseButton: {
     marginHorizontal: 24,
-    backgroundColor: '#667eea',
+    backgroundColor: '#16A34A',
     paddingVertical: 18,
     borderRadius: 14,
     alignItems: 'center',
@@ -396,7 +395,7 @@ const styles = StyleSheet.create({
   },
   restoreButtonText: {
     fontSize: 14,
-    color: '#667eea',
+    color: '#16A34A',
     fontWeight: '600',
   },
   terms: {

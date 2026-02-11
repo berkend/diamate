@@ -27,7 +27,6 @@ export function SettingsScreen() {
     aiPersonalizationEnabled,
     toggleAIPersonalization,
     clearAIMemory,
-    language,
   } = useAppStore();
   
   const [loading, setLoading] = useState(false);
@@ -177,8 +176,10 @@ export function SettingsScreen() {
             
             <View style={styles.divider} />
             
-            <TouchableOpacity style={styles.menuItem} onPress={handleRestorePurchases}>
-              <Text style={styles.menuItemText}>Satın Alımları Geri Yükle</Text>
+            <TouchableOpacity style={styles.menuItem} onPress={handleRestorePurchases} disabled={loading}>
+              <Text style={styles.menuItemText}>
+                {loading ? 'Yükleniyor...' : 'Satın Alımları Geri Yükle'}
+              </Text>
               <Text style={styles.menuItemArrow}>→</Text>
             </TouchableOpacity>
             
@@ -219,7 +220,7 @@ export function SettingsScreen() {
               <Switch
                 value={aiPersonalizationEnabled}
                 onValueChange={toggleAIPersonalization}
-                trackColor={{ false: '#D1D5DB', true: '#667eea' }}
+                trackColor={{ false: '#D1D5DB', true: '#16A34A' }}
                 thumbColor="#FFFFFF"
               />
             </View>
@@ -239,12 +240,12 @@ export function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Gizlilik & Veri</Text>
           <View style={styles.card}>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => Linking.openURL('https://diamate.org/privacy')}>
               <Text style={styles.menuItemText}>📄 Gizlilik Politikası</Text>
               <Text style={styles.menuItemArrow}>→</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => Linking.openURL('https://diamate.org/terms')}>
               <Text style={styles.menuItemText}>📋 Kullanım Koşulları</Text>
               <Text style={styles.menuItemArrow}>→</Text>
             </TouchableOpacity>
@@ -354,7 +355,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#667eea',
+    color: '#16A34A',
   },
   subscriptionRow: {
     flexDirection: 'row',
@@ -373,7 +374,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   upgradeButton: {
-    backgroundColor: '#667eea',
+    backgroundColor: '#16A34A',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,

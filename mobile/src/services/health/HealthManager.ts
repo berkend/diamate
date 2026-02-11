@@ -47,45 +47,62 @@ class HealthManagerClass {
   }
 
   /**
-   * Request health permissions
+   * Request health permissions — returns false gracefully if denied or unavailable
    */
   async requestPermissions(): Promise<boolean> {
-    const service = this.getService();
-    
-    if (Platform.OS === 'ios') {
-      return await (service as typeof HealthKitService).initialize();
-    } else {
-      return await (service as typeof HealthConnectService).requestPermissions();
+    try {
+      const service = this.getService();
+      
+      if (Platform.OS === 'ios') {
+        return await (service as typeof HealthKitService).initialize();
+      } else {
+        return await (service as typeof HealthConnectService).requestPermissions();
+      }
+    } catch {
+      // Health is optional — never crash on permission failure
+      return false;
     }
   }
 
   /**
-   * Check if permissions are granted
+   * Check if permissions are granted — returns false gracefully on error
    */
   async checkPermissions(): Promise<boolean> {
-    const service = this.getService();
-    
-    if (Platform.OS === 'ios') {
-      return await (service as typeof HealthKitService).checkAuthorization();
-    } else {
-      return await (service as typeof HealthConnectService).checkPermissions();
+    try {
+      const service = this.getService();
+      
+      if (Platform.OS === 'ios') {
+        return await (service as typeof HealthKitService).checkAuthorization();
+      } else {
+        return await (service as typeof HealthConnectService).checkPermissions();
+      }
+    } catch {
+      return false;
     }
   }
 
   /**
-   * Get connection status
+   * Get connection status — never throws
    */
   async getConnectionStatus(): Promise<HealthConnection> {
     const provider = this.getProviderName();
-    const connected = await this.checkPermissions();
-    const store = useAppStore.getState();
+    try {
+      const connected = await this.checkPermissions();
+      const store = useAppStore.getState();
 
-    return {
-      provider,
-      connected,
-      lastSync: store.lastHealthSync || undefined,
-      permissions: connected ? ['blood_glucose', 'nutrition', 'activity', 'sleep'] : [],
-    };
+      return {
+        provider,
+        connected,
+        lastSync: store.lastHealthSync || undefined,
+        permissions: connected ? ['blood_glucose', 'nutrition', 'activity', 'sleep'] : [],
+      };
+    } catch {
+      return {
+        provider,
+        connected: false,
+        permissions: [],
+      };
+    }
   }
 
   /**

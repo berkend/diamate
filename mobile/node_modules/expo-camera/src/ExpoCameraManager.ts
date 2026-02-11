@@ -1,5 +1,5 @@
 import { requireNativeModule } from 'expo-modules-core';
 
-const CameraManager: Record<string, any> = requireNativeModule('ExpoCamera');
+import { CameraNativeModule } from './Camera.types';
 
-export default CameraManager;
+export default requireNativeModule<CameraNativeModule>('ExpoCamera');
