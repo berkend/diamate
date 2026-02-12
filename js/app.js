@@ -53,13 +53,21 @@ async function initApp() {
         // Check for existing session
         const session = await getSession();
         if (session) {
-            currentUser = session.user;
-            console.log('User logged in:', currentUser.email);
-            
-            // Load profile from cloud
-            const cloudProfile = await loadProfileFromCloud();
-            if (cloudProfile) {
-                setProfile(cloudProfile);
+            // Verify session is still valid
+            const user = await getCurrentUser();
+            if (user) {
+                currentUser = user;
+                console.log('User logged in:', currentUser.email);
+                
+                // Load profile from cloud
+                const cloudProfile = await loadProfileFromCloud();
+                if (cloudProfile) {
+                    setProfile(cloudProfile);
+                }
+            } else {
+                // Session expired, clear it
+                console.log('Session expired, signing out');
+                await signOut();
             }
         }
     } catch (e) {
@@ -100,17 +108,31 @@ async function initApp() {
     
     // Listen for auth events
     window.addEventListener('auth:signin', async (e) => {
-        currentUser = e.detail?.user;
-        console.log('Auth signin event:', currentUser?.email);
+        const user = e.detail?.user;
+        if (!user) return;
         
-        // Load profile from cloud
-        const cloudProfile = await loadProfileFromCloud();
-        if (cloudProfile && cloudProfile.setupComplete) {
-            setProfile(cloudProfile);
-            navigateTo('dashboard');
-            updateHeaderUI();
-        } else {
-            navigateTo('setup');
+        // Verify user is actually valid
+        try {
+            const verifiedUser = await getCurrentUser();
+            if (!verifiedUser) {
+                console.log('Auth signin event but user not valid, ignoring');
+                return;
+            }
+            currentUser = verifiedUser;
+            console.log('Auth signin event:', currentUser?.email);
+            
+            // Load profile from cloud
+            const cloudProfile = await loadProfileFromCloud();
+            if (cloudProfile && cloudProfile.setupComplete) {
+                setProfile(cloudProfile);
+                navigateTo('dashboard');
+                updateHeaderUI();
+            } else {
+                navigateTo('setup');
+            }
+        } catch (err) {
+            console.error('Auth verification failed:', err);
+            navigateTo('login');
         }
     });
     
