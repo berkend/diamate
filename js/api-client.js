@@ -1,7 +1,7 @@
 // DiaMate API Client - Backend Integration
 // Handles all communication with Netlify Functions backend
 
-const API_BASE = window.DIAMATE_API_URL || '/.netlify/functions';
+const API_BASE = window.DIAMATE_API_URL || 'https://rvqmbawssxhzqldkdpjo.supabase.co/functions/v1';
 
 class DiaMateAPI {
     constructor() {

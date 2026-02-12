@@ -227,9 +227,19 @@ async function runAIAnalysis() {
                 name: item.name,
                 portion: item.portion || '',
                 carbs: item.carbs_g || 0,
+                calories: item.calories || 0,
+                protein: item.protein_g || 0,
+                fat: item.fat_g || 0,
+                fiber: item.fiber_g || 0,
+                glycemicIndex: item.glycemicIndex || '',
                 confidence: item.confidence || 'medium'
             })),
             estimatedCarbs: result.totalCarbs,
+            totalCalories: result.total_calories || 0,
+            totalProtein: result.total_protein_g || 0,
+            totalFat: result.total_fat_g || 0,
+            totalFiber: result.total_fiber_g || 0,
+            glycemicImpact: result.glycemicImpact || 'medium',
             notes: result.notes,
             confidence: result.confidence
         };
@@ -262,7 +272,7 @@ function renderAnalysisResult() {
     const resultEl = document.getElementById('analysisResult');
     if (!resultEl || !analysisResult) return;
     
-    const { items, estimatedCarbs, notes, confidence } = analysisResult;
+    const { items, estimatedCarbs, totalCalories, totalProtein, totalFat, totalFiber, glycemicImpact, notes, confidence } = analysisResult;
     const lang = getLang();
     
     const confidenceText = {
@@ -270,16 +280,67 @@ function renderAnalysisResult() {
         medium: lang === 'en' ? 'Medium' : 'Orta',
         low: lang === 'en' ? 'Low' : 'Düşük'
     };
+
+    const giColors = { low: '#16A34A', medium: '#F59E0B', high: '#EF4444' };
+    const giLabels = {
+        low: lang === 'en' ? '✅ Low Glycemic Impact' : '✅ Düşük Glisemik Etki',
+        medium: lang === 'en' ? '⚡ Medium Glycemic Impact' : '⚡ Orta Glisemik Etki',
+        high: lang === 'en' ? '⚠️ High Glycemic Impact' : '⚠️ Yüksek Glisemik Etki'
+    };
+    const giDescriptions = {
+        low: lang === 'en' ? 'Raises blood sugar slowly' : 'Kan şekerinizi yavaş yükseltir',
+        medium: lang === 'en' ? 'Moderate blood sugar impact' : 'Kan şekerinizi orta hızda yükseltir',
+        high: lang === 'en' ? 'May raise blood sugar quickly' : 'Kan şekerinizi hızla yükseltebilir'
+    };
     
     let html = `
         <div style="margin-top: 20px;">
-            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 24px; border-radius: 20px; color: white; text-align: center; margin-bottom: 16px;">
-                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">${t('Toplam Karbonhidrat', 'Total Carbohydrates')}</div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <input type="number" id="editTotalCarbs" value="${estimatedCarbs}" style="width: 100px; font-size: 40px; font-weight: 800; text-align: center; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4); border-radius: 12px; color: white; padding: 8px;">
-                    <span style="font-size: 24px;">g</span>
+            <!-- Glycemic Impact Badge -->
+            ${glycemicImpact ? `
+            <div style="background: ${giColors[glycemicImpact] || '#6B7280'}15; border: 1px solid ${giColors[glycemicImpact] || '#6B7280'}; padding: 12px; border-radius: 12px; margin-bottom: 16px; text-align: center;">
+                <span style="font-size: 14px; font-weight: 600; color: ${giColors[glycemicImpact] || '#6B7280'};">
+                    ${giLabels[glycemicImpact] || ''} — ${giDescriptions[glycemicImpact] || ''}
+                </span>
+            </div>
+            ` : ''}
+
+            <!-- Macro Breakdown Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+                <div style="background: #FEF3C7; padding: 16px; border-radius: 16px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 800; color: #1F2937;">${totalCalories || 0}</div>
+                    <div style="font-size: 12px; font-weight: 600; color: #6B7280; margin-top: 4px;">${t('Kalori', 'Calories')}</div>
+                    <div style="font-size: 20px; margin-top: 4px;">🔥</div>
                 </div>
-                <div style="font-size: 13px; opacity: 0.8; margin-top: 8px;">${t('Güven:', 'Confidence:')} ${confidenceText[confidence] || confidence}</div>
+                <div style="background: #DCFCE7; padding: 16px; border-radius: 16px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 800; color: #1F2937;">${estimatedCarbs}g</div>
+                    <div style="font-size: 12px; font-weight: 600; color: #6B7280; margin-top: 4px;">${t('Karbonhidrat', 'Carbs')}</div>
+                    <div style="font-size: 20px; margin-top: 4px;">🍞</div>
+                </div>
+                <div style="background: #FEE2E2; padding: 16px; border-radius: 16px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 800; color: #1F2937;">${totalProtein || 0}g</div>
+                    <div style="font-size: 12px; font-weight: 600; color: #6B7280; margin-top: 4px;">${t('Protein', 'Protein')}</div>
+                    <div style="font-size: 20px; margin-top: 4px;">🥩</div>
+                </div>
+                <div style="background: #E0E7FF; padding: 16px; border-radius: 16px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 800; color: #1F2937;">${totalFat || 0}g</div>
+                    <div style="font-size: 12px; font-weight: 600; color: #6B7280; margin-top: 4px;">${t('Yağ', 'Fat')}</div>
+                    <div style="font-size: 20px; margin-top: 4px;">🫒</div>
+                </div>
+            </div>
+            ${totalFiber ? `
+            <div style="background: #F0FDF4; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 16px;">
+                <span style="font-size: 14px; font-weight: 600; color: #16A34A;">🌾 ${t('Lif', 'Fiber')}: ${totalFiber}g</span>
+            </div>
+            ` : ''}
+
+            <!-- Editable Total Carbs -->
+            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); padding: 20px; border-radius: 20px; color: white; text-align: center; margin-bottom: 16px;">
+                <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px;">${t('Toplam KH (düzenlenebilir)', 'Total Carbs (editable)')}</div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <input type="number" id="editTotalCarbs" value="${estimatedCarbs}" style="width: 100px; font-size: 36px; font-weight: 800; text-align: center; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4); border-radius: 12px; color: white; padding: 6px;">
+                    <span style="font-size: 20px;">g</span>
+                </div>
+                <div style="font-size: 12px; opacity: 0.7; margin-top: 6px;">${t('Güven:', 'Confidence:')} ${confidenceText[confidence] || confidence}</div>
             </div>
             
             ${notes ? `
@@ -301,12 +362,25 @@ function renderAnalysisResult() {
             </div>
         `;
     } else {
+        const giTextMap = {
+            low: lang === 'en' ? 'Low GI' : 'Düşük GI',
+            medium: lang === 'en' ? 'Med GI' : 'Orta GI',
+            high: lang === 'en' ? 'High GI ⚠️' : 'Yüksek GI ⚠️'
+        };
         items.forEach((item, index) => {
+            const giTag = item.glycemicIndex ? `<span style="color: ${giColors[item.glycemicIndex] || '#6B7280'}; font-size: 11px; font-weight: 600;"> • ${giTextMap[item.glycemicIndex] || ''}</span>` : '';
+            const macroLine = [
+                item.calories ? `${item.calories} kcal` : '',
+                item.protein ? `${item.protein}g P` : '',
+                item.fat ? `${item.fat}g Y` : ''
+            ].filter(Boolean).join(' • ');
+
             html += `
                 <div style="display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--background); border-radius: 14px; margin-bottom: 10px;">
                     <div style="flex: 1;">
-                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">${item.name}</div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">${item.portion || ''} ${item.confidence ? `• ${confidenceText[item.confidence] || item.confidence}` : ''}</div>
+                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 2px;">${item.name}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">${item.portion || ''}${giTag}</div>
+                        ${macroLine ? `<div style="font-size: 11px; color: #9CA3AF; margin-top: 2px;">${macroLine}</div>` : ''}
                     </div>
                     <div style="display: flex; align-items: center; gap: 4px;">
                         <input type="number" class="item-carbs" data-index="${index}" value="${item.carbs}" style="width: 60px; padding: 8px; text-align: center; font-weight: 700; border: 2px solid var(--border); border-radius: 10px; font-size: 16px;">

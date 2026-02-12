@@ -7,8 +7,8 @@ import { mean, stdDev, daysAgo, t, getLang } from './utils.js';
 import { getGlucoseStatus } from './safety.js';
 import { getSession } from './supabase.js';
 
-// API Base URL - uses relative path for Netlify Functions
-const API_BASE = '/.netlify/functions';
+// API Base URL - Supabase Edge Functions (primary) or Netlify Functions (fallback)
+const API_BASE = window.DIAMATE_API_URL || 'https://rvqmbawssxhzqldkdpjo.supabase.co/functions/v1';
 
 // AI Memory storage key (local conversation history)
 const AI_MEMORY_KEY = 'diamate_ai_memory';
@@ -324,6 +324,11 @@ export async function analyzePhoto(imageDataUrl) {
             success: true,
             items: data.items || [],
             totalCarbs: data.total_carbs_g || 0,
+            total_calories: data.total_calories || 0,
+            total_protein_g: data.total_protein_g || 0,
+            total_fat_g: data.total_fat_g || 0,
+            total_fiber_g: data.total_fiber_g || 0,
+            glycemicImpact: data.glycemicImpact || 'medium',
             notes: data.notes || '',
             confidence: data.confidence || 'medium'
         };

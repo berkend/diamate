@@ -15,6 +15,7 @@ import { Text, StyleSheet } from 'react-native';
 import { ErrorBoundary } from './src/ui/ErrorBoundary';
 
 // Screens
+import { AuthScreen } from './src/screens/AuthScreen';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { MealScreen } from './src/screens/MealScreen';
@@ -27,7 +28,7 @@ import { HealthConnectionsScreen } from './src/screens/HealthConnectionsScreen';
 // Store & Services
 import { useAppStore } from './src/store/appStore';
 import { initPurchases } from './src/services/purchases';
-import { initSupabase } from './src/services/supabase';
+import { initSupabase, getSupabase } from './src/services/supabase';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -92,13 +93,28 @@ function MainTabs() {
 }
 
 export default function App() {
-  const { isOnboarded, initialize } = useAppStore();
+  const { isOnboarded, userId, setUserId, initialize } = useAppStore();
 
   useEffect(() => {
     const init = async () => {
-      await initSupabase();
+      const sb = await initSupabase();
       await initPurchases();
       await initialize();
+
+      // Check existing session
+      const { data: { session } } = await sb.auth.getSession();
+      if (session?.user) {
+        setUserId(session.user.id);
+      }
+
+      // Listen for auth state changes
+      sb.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) {
+          setUserId(session.user.id);
+        } else {
+          useAppStore.getState().logout();
+        }
+      });
     };
     init();
   }, []);
@@ -110,7 +126,9 @@ export default function App() {
           <NavigationContainer>
             <StatusBar style="auto" />
             <Stack.Navigator screenOptions={{ headerShown: false }}>
-              {!isOnboarded ? (
+              {!userId ? (
+                <Stack.Screen name="Auth" component={AuthScreen} />
+              ) : !isOnboarded ? (
                 <Stack.Screen name="Onboarding" component={OnboardingScreen} />
               ) : (
                 <>

@@ -27,6 +27,11 @@ export interface MealItem {
   name: string;
   carbs: number;
   carbs_g?: number;
+  calories?: number;
+  protein_g?: number;
+  fat_g?: number;
+  fiber_g?: number;
+  glycemicIndex?: 'low' | 'medium' | 'high';
   portion?: string;
   confidence?: string;
 }
@@ -113,11 +118,30 @@ export interface MealLog {
   timestamp: string;
   items: MealItem[];
   totalCarbs: number;
+  totalCalories?: number;
+  totalProtein?: number;
+  totalFat?: number;
+  totalFiber?: number;
+  glycemicImpact?: 'low' | 'medium' | 'high';
   photoUrl?: string;
   photoUsed?: boolean;
   source?: string;
   note?: string;
   notes?: string;
+  isFavorite?: boolean;
+  favoriteName?: string;
+}
+
+export interface FavoriteMeal {
+  id: string;
+  name: string;
+  items: MealItem[];
+  totalCarbs: number;
+  totalCalories?: number;
+  totalProtein?: number;
+  totalFat?: number;
+  createdAt: string;
+  usageCount: number;
 }
 
 export interface AIMemory {
@@ -140,6 +164,11 @@ export interface AIResponse {
 export interface AIVisionResponse {
   items: MealItem[];
   total_carbs_g: number;
+  total_calories?: number;
+  total_protein_g?: number;
+  total_fat_g?: number;
+  total_fiber_g?: number;
+  glycemicImpact?: 'low' | 'medium' | 'high';
   notes: string;
   confidence: string;
   error?: string;

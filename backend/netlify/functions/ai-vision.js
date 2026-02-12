@@ -136,6 +136,11 @@ exports.handler = async (event) => {
         return successResponse({
             items: result.items,
             total_carbs_g: result.total_carbs_g || result.items.reduce((sum, i) => sum + (i.carbs_g || 0), 0),
+            total_calories: result.total_calories || 0,
+            total_protein_g: result.total_protein_g || 0,
+            total_fat_g: result.total_fat_g || 0,
+            total_fiber_g: result.total_fiber_g || 0,
+            glycemicImpact: result.glycemicImpact || 'medium',
             notes: result.notes || '',
             confidence: result.confidence || 'medium'
         });
@@ -151,42 +156,53 @@ exports.handler = async (event) => {
  */
 function getVisionPrompt(lang) {
     if (lang === 'en') {
-        return `Analyze this food photo for a diabetes patient. Return ONLY valid JSON with this exact structure:
+        return `You are a diabetes nutrition expert. Analyze this food photo and return ONLY valid JSON with full macro breakdown:
 
 {
   "items": [
-    { "name": "Food name", "portion": "estimated portion size", "carbs_g": 0, "confidence": "high|medium|low" }
+    { "name": "Food name", "portion": "estimated portion with grams", "carbs_g": 0, "calories": 0, "protein_g": 0, "fat_g": 0, "fiber_g": 0, "glycemicIndex": "low|medium|high", "confidence": "high|medium|low" }
   ],
   "total_carbs_g": 0,
-  "notes": "Any relevant notes about the meal",
+  "total_calories": 0,
+  "total_protein_g": 0,
+  "total_fat_g": 0,
+  "total_fiber_g": 0,
+  "glycemicImpact": "low|medium|high",
+  "notes": "Diabetes-specific note about the meal",
   "confidence": "high|medium|low"
 }
 
 Rules:
-- Estimate carbohydrates in grams for each food item
-- Be conservative with estimates (better to slightly overestimate carbs)
-- Include portion size estimates
-- If you cannot identify a food, mark confidence as "low"
-- If the image is not food, return empty items array with a note
+- Estimate portions in grams when possible
+- glycemicIndex per item: low (<55), medium (55-69), high (70+)
+- glycemicImpact: overall meal impact on blood sugar
+- For diabetes patients: highlight high-GI items in notes
+- Be conservative with carb estimates (slightly overestimate is safer)
 - Return ONLY the JSON, no other text`;
     }
 
-    return `Bu yemek fotoğrafını bir diyabet hastası için analiz et. SADECE şu yapıda geçerli JSON döndür:
+    return `Sen bir diyabet beslenme uzmanısın. Bu yemek fotoğrafını analiz et ve tam makro dökümü ile SADECE geçerli JSON döndür:
 
 {
   "items": [
-    { "name": "Yemek adı", "portion": "tahmini porsiyon", "carbs_g": 0, "confidence": "high|medium|low" }
+    { "name": "Yemek adı", "portion": "gram cinsinden tahmini porsiyon", "carbs_g": 0, "calories": 0, "protein_g": 0, "fat_g": 0, "fiber_g": 0, "glycemicIndex": "low|medium|high", "confidence": "high|medium|low" }
   ],
   "total_carbs_g": 0,
-  "notes": "Öğün hakkında notlar",
+  "total_calories": 0,
+  "total_protein_g": 0,
+  "total_fat_g": 0,
+  "total_fiber_g": 0,
+  "glycemicImpact": "low|medium|high",
+  "notes": "Diyabete özel kısa not",
   "confidence": "high|medium|low"
 }
 
 Kurallar:
-- Her yemek için gram cinsinden karbonhidrat tahmin et
+- Porsiyonları mümkünse gram cinsinden tahmin et
+- glycemicIndex: düşük (<55), orta (55-69), yüksek (70+)
+- glycemicImpact: öğünün kan şekerine genel etkisi
+- Türk mutfağını iyi bil: lahmacun (~30g KH), pide (~45g KH), mantı (~35g KH), börek (~25g KH), pilav (1 porsiyon ~45g KH), mercimek çorbası (~20g KH), karnıyarık (~15g KH), baklava (1 dilim ~30g KH), simit (~45g KH), gözleme (~35g KH), döner dürüm (~40g KH), künefe (~35g KH), su böreği (~30g KH), kuru fasulye (~25g KH), bulgur pilavı (~35g KH)
+- Diyabet hastaları için: yüksek GI yiyecekleri notlarda vurgula
 - Tahminlerde muhafazakar ol (karbonhidratı hafif fazla tahmin etmek daha güvenli)
-- Porsiyon boyutu tahminlerini dahil et
-- Bir yemeği tanımlayamıyorsan, güveni "low" olarak işaretle
-- Görsel yemek değilse, boş items dizisi ve not döndür
 - SADECE JSON döndür, başka metin yok`;
 }

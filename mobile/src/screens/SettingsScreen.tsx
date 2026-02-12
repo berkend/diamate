@@ -24,9 +24,11 @@ export function SettingsScreen() {
   const {
     profile,
     entitlement,
+    userId,
     aiPersonalizationEnabled,
     toggleAIPersonalization,
     clearAIMemory,
+    logout,
   } = useAppStore();
   
   const [loading, setLoading] = useState(false);
@@ -84,9 +86,10 @@ export function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              // In production, get userId from auth
-              // await deleteAccount(userId);
-              Alert.alert('Başarılı', 'Hesabınız silindi.');
+              if (userId) {
+                await deleteAccount(userId);
+                logout();
+              }
             } catch (error) {
               Alert.alert('Hata', 'Hesap silinemedi.');
             }
@@ -107,6 +110,7 @@ export function SettingsScreen() {
           onPress: async () => {
             try {
               await signOut();
+              logout();
             } catch (error) {
               console.error('Sign out error:', error);
             }

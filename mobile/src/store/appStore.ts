@@ -5,7 +5,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GlucoseReading, MealLog, UserProfile, Entitlement, AIMemory } from '../types';
+import { GlucoseReading, MealLog, UserProfile, Entitlement, AIMemory, FavoriteMeal } from '../types';
 
 interface AppState {
   // Auth & Profile
@@ -25,14 +25,19 @@ interface AppState {
   aiMemory: AIMemory;
   aiPersonalizationEnabled: boolean;
   
+  // Favorite Meals
+  favoriteMeals: FavoriteMeal[];
+  
   // Settings
   language: 'tr' | 'en';
   
   // Actions
   initialize: () => Promise<void>;
+  setUserId: (id: string) => void;
   setOnboarded: (value: boolean) => void;
   setProfile: (profile: Partial<UserProfile>) => void;
   setEntitlement: (entitlement: Entitlement) => void;
+  logout: () => void;
   
   // Health Actions
   addGlucoseReading: (reading: GlucoseReading) => void;
@@ -43,6 +48,11 @@ interface AppState {
   updateAIMemory: (memory: Partial<AIMemory>) => void;
   clearAIMemory: () => void;
   toggleAIPersonalization: (enabled: boolean) => void;
+  
+  // Favorite Meal Actions
+  addFavoriteMeal: (meal: FavoriteMeal) => void;
+  removeFavoriteMeal: (id: string) => void;
+  useFavoriteMeal: (id: string) => void;
   
   // Computed
   getRecentContext: () => object;
@@ -83,6 +93,7 @@ export const useAppStore = create<AppState>()(
       lastHealthSync: null,
       aiMemory: DEFAULT_AI_MEMORY,
       aiPersonalizationEnabled: true,
+      favoriteMeals: [],
       language: 'tr',
 
       // Initialize
@@ -106,6 +117,19 @@ export const useAppStore = create<AppState>()(
       },
 
       // Auth & Profile
+      setUserId: (id) => set({ userId: id }),
+
+      logout: () => set({
+        userId: null,
+        isOnboarded: false,
+        profile: null,
+        entitlement: DEFAULT_ENTITLEMENT,
+        glucoseReadings: [],
+        mealLogs: [],
+        aiMemory: DEFAULT_AI_MEMORY,
+        favoriteMeals: [],
+      }),
+
       setOnboarded: (value) => set({ isOnboarded: value }),
       
       setProfile: (profile) => set((state) => ({
@@ -157,6 +181,21 @@ export const useAppStore = create<AppState>()(
       toggleAIPersonalization: (enabled) => set({
         aiPersonalizationEnabled: enabled,
       }),
+
+      // Favorite Meals
+      addFavoriteMeal: (meal) => set((state) => ({
+        favoriteMeals: [...state.favoriteMeals, meal].slice(-50),
+      })),
+
+      removeFavoriteMeal: (id) => set((state) => ({
+        favoriteMeals: state.favoriteMeals.filter((m) => m.id !== id),
+      })),
+
+      useFavoriteMeal: (id) => set((state) => ({
+        favoriteMeals: state.favoriteMeals.map((m) =>
+          m.id === id ? { ...m, usageCount: m.usageCount + 1 } : m
+        ),
+      })),
 
       // Computed Getters
       getRecentContext: () => {
@@ -261,6 +300,7 @@ export const useAppStore = create<AppState>()(
         lastHealthSync: state.lastHealthSync,
         aiMemory: state.aiMemory,
         aiPersonalizationEnabled: state.aiPersonalizationEnabled,
+        favoriteMeals: state.favoriteMeals,
         language: state.language,
       }),
     }

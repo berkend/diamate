@@ -1,2 +1,12 @@
 # Local Netlify folder
 .netlify
+
+# Dependencies
+node_modules/
+
+# Cloudflare
+.wrangler/
+
+# Environment
+.env
+.env.local

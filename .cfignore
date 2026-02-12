@@ -1,0 +1,12 @@
+# Don't deploy these to Cloudflare Pages
+node_modules/
+mobile/
+backend/
+supabase/
+.git/
+.netlify/
+.wrangler/
+*.md
+package-lock.json
+netlify.toml
+wrangler.toml
