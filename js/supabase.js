@@ -25,8 +25,8 @@ export async function initSupabase() {
     
     // Listen for auth changes
     supabase.auth.onAuthStateChange((event, session) => {
-        console.log('Auth state changed:', event);
-        if (event === 'SIGNED_IN') {
+        console.log('Auth state changed:', event, session ? 'has session' : 'no session');
+        if (event === 'SIGNED_IN' && session?.user) {
             window.dispatchEvent(new CustomEvent('auth:signin', { detail: session }));
         } else if (event === 'SIGNED_OUT') {
             window.dispatchEvent(new CustomEvent('auth:signout'));

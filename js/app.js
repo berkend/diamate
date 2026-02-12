@@ -290,7 +290,7 @@ function handleRouteChange({ route, subroute }) {
     console.log('Route changed:', route, subroute);
     
     // Auth guard - redirect to login if not authenticated
-    const protectedRoutes = ['dashboard', 'log', 'dose', 'analyze', 'reports', 'chat', 'profile'];
+    const protectedRoutes = ['dashboard', 'log', 'dose', 'analyze', 'reports', 'chat', 'profile', 'setup'];
     if (protectedRoutes.includes(route) && !currentUser) {
         navigateTo('login');
         return;
